@@ -12,10 +12,15 @@ import scala.collection.immutable.Seq
 import scala.collection.mutable.ListBuffer
 class VerificationFailure private[this] (message: String) extends RuntimeException(message) {
 
-  def this(expectation: ServiceExpectation, verificationResults: Seq[RequestVerificationResult]) =
+  def this(expectation: ServiceExpectation,
+           expectedTimesCalled: Int,
+           actualTimesCalled: Int,
+           verificationResults: Seq[RequestVerificationResult]) =
     this(
-      "*************************************\nThe following expectation could not be verified :-\n" + expectation.prettyFormat +
-        "\nThe following requests were not matched:\n" + verificationResults
+      "*************************************\n" +
+        s"The following expectation as matched $actualTimesCalled out of $expectedTimesCalled times:-\n" +
+        expectation.prettyFormat +
+        "\nThe following requests were made:-\n" + verificationResults
         .sortBy(_.allMatchResult.score.percentage)
         .reverse
         .map(_.prettifyVerification)
@@ -82,16 +87,17 @@ class RequestMatching(matchingAttempt: MatchingAttempt) {
     serviceRequests.clear()
   }
 
-  def verifyCall(expectation: ServiceExpectation): Unit = {
+  def verifyCall(expectation: ServiceExpectation, expectedTimes: Int = 1): Unit = {
     val allMatchResults: Seq[RequestVerificationResult] = serviceRequests.toList.map {
       serviceRequest =>
         RequestVerificationResult(serviceRequest,
                                   matchingAttempt.tryMatching(expectation, serviceRequest))
     }
 
-    val hasBeenCalled = allMatchResults.exists(_.matches)
+    val actualTimes = allMatchResults.count(_.matches)
+    val hasBeenCalled = actualTimes == expectedTimes
     if (!hasBeenCalled) {
-      throw new VerificationFailure(expectation, allMatchResults)
+      throw new VerificationFailure(expectation, expectedTimes, actualTimes, allMatchResults)
     }
   }
 }

@@ -154,5 +154,46 @@ class RequestMatchingTest extends BaseTest with BeforeAndAfter {
 
       requestMatching.verifyCall(verifyExpectation)
     }
+
+    "error when there are calls and one matches but it is supposed to match twice" in {
+      val request1 = createRequest
+      requestMatching.resolveResponse(request1)
+      val request2 = createRequest
+      requestMatching.resolveResponse(request2)
+
+      val verifyExpectation = ServiceExpectation(httpMethodMatcher = HttpMethodMatcher.postMatcher)
+
+      (matchingAttempt.tryMatching _)
+        .expects(verifyExpectation, request1)
+        .returning(createAnyAllMatchResult)
+
+      (matchingAttempt.tryMatching _)
+        .expects(verifyExpectation, request2)
+        .returning(createSuccessfulMatchResult(10))
+
+      a[VerificationFailure] should be thrownBy requestMatching.verifyCall(verifyExpectation, 2)
+    }
+
+    "not error when the expectation does actually match 2 requests" in {
+      val request1 = createRequest
+      requestMatching.resolveResponse(request1)
+      val request2 = createRequest
+      requestMatching.resolveResponse(request2)
+      requestMatching.resolveResponse(request2)
+
+      val verifyExpectation = ServiceExpectation(httpMethodMatcher = HttpMethodMatcher.postMatcher)
+
+      (matchingAttempt.tryMatching _)
+        .expects(verifyExpectation, request1)
+        .returning(createAnyAllMatchResult)
+
+      (matchingAttempt.tryMatching _)
+        .expects(verifyExpectation, request2)
+        .returning(createSuccessfulMatchResult(10))
+        .twice()
+
+      requestMatching.verifyCall(verifyExpectation, 2)
+    }
+
   }
 }
