@@ -5,6 +5,7 @@ import org.http4s.Header
 import org.scalahttpmock.BaseTest
 import org.scalahttpmock.expectation.matcher.{GetMatcher, HeaderEquals}
 import org.scalahttpmock.expectation.{JsonResponse, ServiceExpectation}
+import org.scalahttpmock.service.request.VerificationFailure
 import org.scalatest.BeforeAndAfter
 
 class TestServiceTest extends BaseTest with BeforeAndAfter {
@@ -131,4 +132,43 @@ class TestServiceTest extends BaseTest with BeforeAndAfter {
     val response = request.send()
     response.code shouldBe 200
   }
+
+  "not fail on valid verification" in {
+    val expectedJsonResponse = """{"a" : "4"}"""
+    val matchUrlExpectation =
+      ServiceExpectation(uriMatcher = "/test/path".asPathEquals,
+                         paramMatchers = Vector(("a", "1"), ("a", "2")).asParamEquals,
+                         response = JsonResponse(200, Some(expectedJsonResponse)))
+
+    service.addExpectation(matchUrlExpectation)
+    val uri = uri"http://localhost:$port/test/path?a=1&a=2"
+
+    val request = sttp.get(uri)
+    val response = request.send()
+
+    response.code shouldBe 200
+
+    service.verifyCall(matchUrlExpectation.changeUri("/test/path?a=1&a=2".asUriEquals))
+  }
+
+  "fail on invalid verification" in {
+    val expectedJsonResponse = """{"a" : "4"}"""
+    val matchUrlExpectation =
+      ServiceExpectation(uriMatcher = "/test/path".asPathEquals,
+                         paramMatchers = Vector(("a", "1"), ("a", "2")).asParamEquals,
+                         response = JsonResponse(200, Some(expectedJsonResponse)))
+
+    service.addExpectation(matchUrlExpectation)
+    val uri = uri"http://localhost:$port/test/path?a=1&a=2"
+
+    val request = sttp.get(uri)
+    val response = request.send()
+
+    response.code shouldBe 200
+
+    a[VerificationFailure] should be thrownBy service.verifyCall(
+      matchUrlExpectation.changeUri("/invalid/path?a=1&a=2".asUriEquals)
+    )
+  }
+
 }
