@@ -14,7 +14,7 @@ import org.scalahttpmock.expectation.{MatchingAttempt, ServiceExpectation}
 import org.scalahttpmock.service.request.RequestMatching
 import org.scalatest.Matchers
 
-class TestService(port: Int) extends Matchers with LazyLogging {
+class TestService private[service] (port: Int) extends Matchers with LazyLogging {
   private[this] val requestMatching = new RequestMatching(new MatchingAttempt)
 
   private[this] val messageFailureLogger = getLogger("org.http4s.server.message-failures")
