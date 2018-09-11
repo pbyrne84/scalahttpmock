@@ -21,12 +21,11 @@ class TestServiceTest extends BaseTest with BeforeAndAfter {
     "return 501 when nothing is found" in {
 
       service.addExpectation(
-        ServiceExpectation(
-          headerMatchers = Vector(HeaderEquals("a", "avalue")),
-          httpMethodMatcher = GetMatcher,
-          uriMatcher = "/test/anotherpath".asUriEquals,
-          response = JsonResponse(202)
-        )
+        ServiceExpectation()
+          .addHeader(HeaderEquals("a", "avalue"))
+          .changeMethod(GetMatcher)
+          .changeUri("/test/anotherpath".asUriEquals)
+          .changeResponse(JsonResponse(202))
       )
 
       val uri = uri"http://localhost:$port/test/path"
@@ -44,12 +43,11 @@ class TestServiceTest extends BaseTest with BeforeAndAfter {
       val responseJson = """{"a":"2"}"""
       val customHeader = Header("custom_header", "custom_header_value")
       service.addExpectation(
-        ServiceExpectation(
-          headerMatchers = Vector(HeaderEquals("a", "avalue")),
-          httpMethodMatcher = GetMatcher,
-          uriMatcher = "/test/path".asUriEquals,
-          response = JsonResponse(202, Some(responseJson), Vector(customHeader))
-        )
+        ServiceExpectation()
+          .addHeader(HeaderEquals("a", "avalue"))
+          .changeMethod(GetMatcher)
+          .changeUri("/test/path".asUriEquals)
+          .changeResponse(JsonResponse(202, Some(responseJson), Vector(customHeader)))
       )
 
       val uri = uri"$uriText"
@@ -73,12 +71,11 @@ class TestServiceTest extends BaseTest with BeforeAndAfter {
       val payloadJson = """{"b":"4"}"""
       val customHeader = Header("custom_header", "custom_header_value")
       service.addExpectation(
-        ServiceExpectation(
-          headerMatchers = Vector(HeaderEquals("a", "avalue")),
-          httpMethodMatcher = payloadJson.asJsonPostMatcher,
-          uriMatcher = "/test/path".asUriEquals,
-          response = JsonResponse(202, Some(responseJson), Vector(customHeader))
-        )
+        ServiceExpectation()
+          .addHeader(HeaderEquals("a", "avalue"))
+          .changeMethod(payloadJson.asJsonPostMatcher)
+          .changeUri("/test/path".asUriEquals)
+          .changeResponse(JsonResponse(202, Some(responseJson), Vector(customHeader)))
       )
 
       val uri = uri"$uriText"
