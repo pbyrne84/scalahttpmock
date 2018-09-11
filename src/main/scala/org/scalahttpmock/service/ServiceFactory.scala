@@ -78,8 +78,8 @@ class TestService private[service] (port: Int) extends Matchers with LazyLogging
   def addExpectation(expectation: ServiceExpectation): Unit =
     requestMatching.addExpectation(expectation)
 
-  def verifyCall(expectation: ServiceExpectation): Unit =
-    requestMatching.verifyCall(expectation)
+  def verifyCall(expectation: ServiceExpectation, expectedTimes: Int = 1): Unit =
+    requestMatching.verifyCall(expectation, expectedTimes)
 
   def shutDown(): Unit = server.shutdownNow()
 }
