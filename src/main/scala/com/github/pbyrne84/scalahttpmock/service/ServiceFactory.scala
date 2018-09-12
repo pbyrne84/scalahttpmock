@@ -12,9 +12,8 @@ import org.http4s.headers.{`Content-Length`, Connection}
 import org.http4s.server.ServiceErrorHandler
 import org.http4s.server.blaze.BlazeBuilder
 import org.log4s.getLogger
-import org.scalatest.Matchers
 
-class TestService private[service] (port: Int) extends Matchers with LazyLogging {
+class TestService private[service] (port: Int) extends LazyLogging {
   private[this] val requestMatching = new RequestMatching(new MatchingAttempt)
 
   private[this] val messageFailureLogger = getLogger("org.http4s.server.message-failures")
