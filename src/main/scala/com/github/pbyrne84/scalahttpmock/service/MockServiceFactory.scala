@@ -2,7 +2,6 @@ package com.github.pbyrne84.scalahttpmock.service
 
 import cats.Monad
 import cats.effect.IO
-import ch.qos.logback.classic.Logger
 import com.github.pbyrne84.scalahttpmock.expectation.{MatchingAttempt, ServiceExpectation}
 import com.github.pbyrne84.scalahttpmock.service.request.RequestMatching
 import com.typesafe.scalalogging.LazyLogging
@@ -13,7 +12,9 @@ import org.http4s.server.ServiceErrorHandler
 import org.http4s.server.blaze.BlazeBuilder
 import org.log4s.getLogger
 
-class TestService private[service] (port: Int) extends LazyLogging {
+import scala.language.higherKinds
+
+class MockService private[service] (port: Int) extends LazyLogging {
   private[this] val requestMatching = new RequestMatching(new MatchingAttempt)
 
   private[this] val messageFailureLogger = getLogger("org.http4s.server.message-failures")
@@ -32,7 +33,7 @@ class TestService private[service] (port: Int) extends LazyLogging {
       IO(Response(Status.NotImplemented))
   }
 
-  private def DefaultServiceErrorHandler2[F[_]](implicit F: Monad[F]): ServiceErrorHandler[F] =
+  private def DefaultServiceErrorHandler[F[_]](implicit F: Monad[F]): ServiceErrorHandler[F] =
     req => {
       case mf: MessageFailure =>
         messageFailureLogger.debug(mf)(
@@ -59,16 +60,10 @@ class TestService private[service] (port: Int) extends LazyLogging {
 
     }
 
-  val root: Logger = org.slf4j.LoggerFactory
-    .getLogger("ROOT")
-    .asInstanceOf[Logger]
-
-  root.setLevel(ch.qos.logback.classic.Level.ERROR)
-
   private val builder = BlazeBuilder[IO]
     .bindHttp(port, "localhost")
     .mountService(mockINGHttpService, "/")
-    .withServiceErrorHandler(DefaultServiceErrorHandler2)
+    .withServiceErrorHandler(DefaultServiceErrorHandler)
     .start
   private val server = builder.unsafeRunSync()
 
@@ -83,7 +78,7 @@ class TestService private[service] (port: Int) extends LazyLogging {
   def shutDown(): Unit = server.shutdownNow()
 }
 
-object ServiceFactory {
+object MockServiceFactory {
 
-  def create(port: Int): TestService = new TestService(port)
+  def create(port: Int): MockService = new MockService(port)
 }

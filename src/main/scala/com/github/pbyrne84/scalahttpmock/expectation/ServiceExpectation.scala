@@ -65,15 +65,15 @@ case class ServiceExpectation(
     headerMatchers = headerMatchers ++ newHeaderMatchers
   )
 
-  def replaceHeaders(newHeaderMatchers: Seq[HeaderMatcher]): ServiceExpectation = copy(
+  def withHeaders(newHeaderMatchers: Seq[HeaderMatcher]): ServiceExpectation = copy(
     headerMatchers = newHeaderMatchers
   )
 
-  def changeMethod(newHttpMethodMatcher: HttpMethodMatcher): ServiceExpectation = copy(
+  def withMethod(newHttpMethodMatcher: HttpMethodMatcher): ServiceExpectation = copy(
     httpMethodMatcher = newHttpMethodMatcher
   )
 
-  def changeUri(newUriMatcher: UriMatcher): ServiceExpectation = copy(
+  def withUri(newUriMatcher: UriMatcher): ServiceExpectation = copy(
     uriMatcher = newUriMatcher
   )
 
@@ -85,11 +85,11 @@ case class ServiceExpectation(
     paramMatchers = paramMatchers ++ newParamMatchers
   )
 
-  def replaceParams(newParamMatchers: Seq[ParamMatcher]): ServiceExpectation = copy(
+  def withParams(newParamMatchers: Seq[ParamMatcher]): ServiceExpectation = copy(
     paramMatchers = newParamMatchers
   )
 
-  def changeResponse(newResponse: MatchedResponse): ServiceExpectation = copy(
+  def withResponse(newResponse: MatchedResponse): ServiceExpectation = copy(
     response = newResponse
   )
 
