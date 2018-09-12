@@ -11,7 +11,7 @@ import org.scalatest.BeforeAndAfter
 class TestServiceTest extends BaseTest with BeforeAndAfter {
 
   private val port = 9001
-  private val service = new TestService(port)
+  private val service = new MockService(port)
   implicit val backend: SttpBackend[Id, Nothing] = HttpURLConnectionBackend()
 
   before {
@@ -24,9 +24,9 @@ class TestServiceTest extends BaseTest with BeforeAndAfter {
       service.addExpectation(
         ServiceExpectation()
           .addHeader(HeaderEquals("a", "avalue"))
-          .changeMethod(GetMatcher)
-          .changeUri("/test/anotherpath".asUriEquals)
-          .changeResponse(JsonResponse(202))
+          .withMethod(GetMatcher)
+          .withUri("/test/anotherpath".asUriEquals)
+          .withResponse(JsonResponse(202))
       )
 
       val uri = uri"http://localhost:$port/test/path"
@@ -46,9 +46,9 @@ class TestServiceTest extends BaseTest with BeforeAndAfter {
       service.addExpectation(
         ServiceExpectation()
           .addHeader(HeaderEquals("a", "avalue"))
-          .changeMethod(GetMatcher)
-          .changeUri("/test/path".asUriEquals)
-          .changeResponse(JsonResponse(202, Some(responseJson), Vector(customHeader)))
+          .withMethod(GetMatcher)
+          .withUri("/test/path".asUriEquals)
+          .withResponse(JsonResponse(202, Some(responseJson), Vector(customHeader)))
       )
 
       val uri = uri"$uriText"
@@ -74,9 +74,9 @@ class TestServiceTest extends BaseTest with BeforeAndAfter {
       service.addExpectation(
         ServiceExpectation()
           .addHeader(HeaderEquals("a", "avalue"))
-          .changeMethod(payloadJson.asJsonPostMatcher)
-          .changeUri("/test/path".asUriEquals)
-          .changeResponse(JsonResponse(202, Some(responseJson), Vector(customHeader)))
+          .withMethod(payloadJson.asJsonPostMatcher)
+          .withUri("/test/path".asUriEquals)
+          .withResponse(JsonResponse(202, Some(responseJson), Vector(customHeader)))
       )
 
       val uri = uri"$uriText"
@@ -148,7 +148,7 @@ class TestServiceTest extends BaseTest with BeforeAndAfter {
 
     response.code shouldBe 200
 
-    service.verifyCall(matchUrlExpectation.changeUri("/test/path?a=1&a=2".asUriEquals))
+    service.verifyCall(matchUrlExpectation.withUri("/test/path?a=1&a=2".asUriEquals))
   }
 
   "fail on invalid verification" in {
@@ -167,7 +167,7 @@ class TestServiceTest extends BaseTest with BeforeAndAfter {
     response.code shouldBe 200
 
     a[VerificationFailure] should be thrownBy service.verifyCall(
-      matchUrlExpectation.changeUri("/invalid/path?a=1&a=2".asUriEquals)
+      matchUrlExpectation.withUri("/invalid/path?a=1&a=2".asUriEquals)
     )
   }
 

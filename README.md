@@ -10,18 +10,18 @@ All package name etc will change before publishing
 ## Starting
 
 ```scala
-ServiceFactory.create(9999) // will create a running test service on 8888
+MockServiceFactory.create(9999) // will create a running test service on 8888
 ```
 
 
 ## Adding an expectation
 ```scala
-testService.addExpectation(ServiceExpectation())
+mockService.addExpectation(ServiceExpectation())
 ```
 
 ## Verifying an expectation was called
 ```scala
-testService.verifyCall(ServiceExpectation())
+mockService.verifyCall(ServiceExpectation())
 ```
 
 ## ServiceExpectation and scoring
