@@ -10,7 +10,7 @@ All package name etc will change before publishing
 ## Starting
 
 ```scala
-MockServiceFactory.create(9999) // will create a running test service on 8888
+MockServiceFactory.create(9999) // will create a running test service on 9999
 ```
 
 
