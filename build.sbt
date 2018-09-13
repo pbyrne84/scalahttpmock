@@ -18,13 +18,15 @@ libraryDependencies ++= Seq(
   // Optional for string interpolation to JSON model
   "io.circe" %% "circe-literal" % "0.9.3",
   "io.circe" %% "circe-parser" % "0.9.3",
-  "com.softwaremill.sttp" %% "core" % "1.3.1" % "test"
+  "com.softwaremill.sttp" %% "core" % "1.3.1" % Test
 )
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % Test
 
-libraryDependencies += "org.scalamock" %% "scalamock-scalatest-support" % "3.6.0" % "test"
+libraryDependencies += "org.scalamock" %% "scalamock-scalatest-support" % "3.6.0" % Test
 
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
 
 libraryDependencies +=  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0"
+
+libraryDependencies += "org.clapper" %% "classutil" % "1.3.0" % Provided
