@@ -1,11 +1,20 @@
 package com.github.pbyrne84.scalahttpmock.service
 
 import com.github.pbyrne84.scalahttpmock.BaseTest
-import com.github.pbyrne84.scalahttpmock.expectation.matcher.{GetMatcher, HeaderEquals}
-import com.github.pbyrne84.scalahttpmock.expectation.{JsonResponse, ServiceExpectation}
+import com.github.pbyrne84.scalahttpmock.expectation.matcher.{
+  GetMatcher,
+  HeaderEquals,
+  HttpMethodMatcher
+}
+import com.github.pbyrne84.scalahttpmock.expectation.{
+  JsonResponse,
+  LocationResponse,
+  ServiceExpectation
+}
 import com.github.pbyrne84.scalahttpmock.service.request.VerificationFailure
 import com.softwaremill.sttp._
 import org.http4s.Header
+import org.http4s.headers.Location
 import org.scalatest.BeforeAndAfter
 
 class TestServiceTest extends BaseTest with BeforeAndAfter {
@@ -93,6 +102,29 @@ class TestServiceTest extends BaseTest with BeforeAndAfter {
       response.headers shouldHaveEntry customHeader
 
       response.unsafeBody shouldBe responseJson
+    }
+
+    "location header is returned" in {
+      val redirect = "http://test.com"
+      service.addExpectation(
+        ServiceExpectation()
+          .withUri("/test/path2".asUriEquals)
+          .withMethod(HttpMethodMatcher.getMatcher)
+          .withResponse(LocationResponse(303, redirect))
+      )
+
+      val uriText = s"http://localhost:$port/test/path2"
+
+      val uri = uri"$uriText"
+      val request = sttp
+        .followRedirects(false)
+        .get(uri)
+
+      val response = request.send()
+
+      response.code shouldBe 303
+      response.headers shouldHaveEntry Location(org.http4s.Uri.unsafeFromString(redirect))
+
     }
   }
 
