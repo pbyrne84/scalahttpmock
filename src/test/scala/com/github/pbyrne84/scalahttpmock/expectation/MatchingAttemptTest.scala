@@ -1,12 +1,12 @@
 package com.github.pbyrne84.scalahttpmock.expectation
 import cats.effect.IO
-import com.github.pbyrne84.scalahttpmock.BaseTest
+import com.github.pbyrne84.scalahttpmock.BaseSpec
 import com.github.pbyrne84.scalahttpmock.expectation.matcher._
 import org.http4s.{Header, Headers, Method, Request}
 import org.scalatest.OptionValues
 import org.scalatest.prop.TableDrivenPropertyChecks
 
-class MatchingAttemptTest extends BaseTest with TableDrivenPropertyChecks with OptionValues {
+class MatchingAttemptTest extends BaseSpec with TableDrivenPropertyChecks with OptionValues {
 
   private val matchingAttempt = new MatchingAttempt
 

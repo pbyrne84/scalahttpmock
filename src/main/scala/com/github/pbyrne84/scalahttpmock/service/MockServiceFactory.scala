@@ -4,6 +4,7 @@ import cats.Monad
 import cats.effect.IO
 import com.github.pbyrne84.scalahttpmock.expectation.{MatchingAttempt, ServiceExpectation}
 import com.github.pbyrne84.scalahttpmock.service.request.RequestMatching
+import com.github.pbyrne84.scalahttpmock.service.response.ResponseRemapping
 import com.typesafe.scalalogging.LazyLogging
 import org.http4s._
 import org.http4s.dsl.io._
@@ -22,11 +23,12 @@ class MockService private[service] (port: Int) extends LazyLogging {
 
   private val mockINGHttpService = HttpService[IO] {
     case request: Request[IO] =>
-      requestMatching
+      val potentialResponse = requestMatching
         .resolveResponse(request)
-        .maybeResponse
-        .map(response => ResponseRemapping.respond(response))
-        .getOrElse(IO(Response[IO](Status.NotImplemented)))
+
+      potentialResponse.maybeResponse
+        .map(response => ResponseRemapping.respondSuccessfully(response))
+        .getOrElse(ResponseRemapping.respondUnSuccessfully(request, potentialResponse.allAttempts))
 
     case unknown =>
       messageFailureLogger.info(s"failed matching request\n$unknown")

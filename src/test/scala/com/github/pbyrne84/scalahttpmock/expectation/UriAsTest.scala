@@ -1,7 +1,7 @@
 package com.github.pbyrne84.scalahttpmock.expectation
-import com.github.pbyrne84.scalahttpmock.BaseTest
+import com.github.pbyrne84.scalahttpmock.BaseSpec
 
-class UriAsTest extends BaseTest {
+class UriAsTest extends BaseSpec {
 
   "uri as" should {
 

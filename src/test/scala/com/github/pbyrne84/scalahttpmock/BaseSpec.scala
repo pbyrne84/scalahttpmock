@@ -16,7 +16,7 @@ import org.scalatest.{Matchers, WordSpec}
 import scala.collection.immutable.Seq
 import scala.language.implicitConversions
 
-class BaseTest extends WordSpec with Matchers with MockFactory {
+class BaseSpec extends WordSpec with Matchers with MockFactory {
 
   implicit class StringAsMatcher(string: String) {
     def asUri: Uri = Uri.unsafeFromString(string)
@@ -70,5 +70,10 @@ class BaseTest extends WordSpec with Matchers with MockFactory {
   def createSuccessfulMatchResult(total: Int): AllMatchResult = createAnyAllMatchResult.copy(
     uriMatchResult = UriMatchResult(AnyUriMatcher, MatchingScore.success(total))
   )
+
+  def createMatchResultWithScore(total: Double, possible: Double): AllMatchResult =
+    createAnyAllMatchResult.copy(
+      uriMatchResult = UriMatchResult(AnyUriMatcher, MatchingScore(total, possible))
+    )
 
 }
