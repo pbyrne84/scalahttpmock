@@ -1,5 +1,5 @@
 package com.github.pbyrne84.scalahttpmock.service.request
-import com.github.pbyrne84.scalahttpmock.BaseTest
+import com.github.pbyrne84.scalahttpmock.BaseSpec
 import com.github.pbyrne84.scalahttpmock.expectation.matcher.HttpMethodMatcher
 import com.github.pbyrne84.scalahttpmock.expectation.{
   JsonResponse,
@@ -8,7 +8,7 @@ import com.github.pbyrne84.scalahttpmock.expectation.{
 }
 import org.scalatest.BeforeAndAfter
 
-class RequestMatchingTest extends BaseTest with BeforeAndAfter {
+class RequestMatchingTest extends BaseSpec with BeforeAndAfter {
 
   private val matchingAttempt: MatchingAttempt = mock[MatchingAttempt]
   private val requestMatching = new RequestMatching(matchingAttempt)

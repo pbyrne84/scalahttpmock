@@ -1,9 +1,9 @@
 package com.github.pbyrne84.scalahttpmock.expectation
 
-import com.github.pbyrne84.scalahttpmock.BaseTest
+import com.github.pbyrne84.scalahttpmock.BaseSpec
 import com.github.pbyrne84.scalahttpmock.expectation.matcher._
 
-class AllMatchResultTest extends BaseTest {
+class AllMatchResultTest extends BaseSpec {
 
   "prettify score with failed" should {
 

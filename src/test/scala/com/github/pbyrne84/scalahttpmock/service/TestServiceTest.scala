@@ -1,6 +1,6 @@
 package com.github.pbyrne84.scalahttpmock.service
 
-import com.github.pbyrne84.scalahttpmock.BaseTest
+import com.github.pbyrne84.scalahttpmock.BaseSpec
 import com.github.pbyrne84.scalahttpmock.expectation.matcher.{
   GetMatcher,
   HeaderEquals,
@@ -17,7 +17,7 @@ import org.http4s.Header
 import org.http4s.headers.Location
 import org.scalatest.BeforeAndAfter
 
-class TestServiceTest extends BaseTest with BeforeAndAfter {
+class TestServiceTest extends BaseSpec with BeforeAndAfter {
 
   private val port = 9001
   private val service = new MockService(port)

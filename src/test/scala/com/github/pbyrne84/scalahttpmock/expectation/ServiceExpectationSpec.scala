@@ -1,8 +1,8 @@
 package com.github.pbyrne84.scalahttpmock.expectation
-import com.github.pbyrne84.scalahttpmock.BaseTest
+import com.github.pbyrne84.scalahttpmock.BaseSpec
 import com.github.pbyrne84.scalahttpmock.expectation.matcher.{JsonContentEquals, PostMatcher}
 
-class ServiceExpectationSpec extends BaseTest {
+class ServiceExpectationSpec extends BaseSpec {
 
   "prettyFormat" should {
     "display expectation in human readable form for the default which is any anything" in {
