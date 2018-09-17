@@ -38,7 +38,7 @@ case class RequestVerificationResult(request: Request[IO], allMatchResult: AllMa
 
   import com.github.pbyrne84.scalahttpmock.expectation.RequestPrettification._
 
-  val prettifyVerification: String = allMatchResult.prettifyScoreWithFailedOverview + "\n" +
+  val prettifyVerification: String = allMatchResult.prettifyResult + "\n" +
     request.prettyFormat
 
 }
