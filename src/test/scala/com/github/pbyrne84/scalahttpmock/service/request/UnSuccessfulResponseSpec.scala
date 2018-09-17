@@ -38,8 +38,13 @@ class UnSuccessfulResponseSpec extends BaseSpec {
         |  )
         |  There was 1 expectations :-
         |    [INVALID] SCORE:0.0/0.0 failed {METHOD Any, URI Any, CONTENT Any}
-        |      Non matching headers : None
-        |      Non matching params  : None
+        |      Method  - Non matching : Any
+        |      Headers - Matching     : None
+        |      Headers - Non matching : None
+        |      Uri     - Non matching : Any
+        |      Params  - Matching     : None
+        |      Params  - Non matching : None
+        |      Content - Non matching : Any
       """.stripMargin.trim
     }
 
@@ -58,12 +63,22 @@ class UnSuccessfulResponseSpec extends BaseSpec {
           |  )
           |  There was 2 expectations :-
           |    [INVALID] SCORE:10.0/8.0 failed {METHOD Any, URI Any, CONTENT Any}
-          |      Non matching headers : None
-          |      Non matching params  : None
+          |      Method  - Non matching : Any
+          |      Headers - Matching     : None
+          |      Headers - Non matching : None
+          |      Uri     - Non matching : Any
+          |      Params  - Matching     : None
+          |      Params  - Non matching : None
+          |      Content - Non matching : Any
           |
           |    [INVALID] SCORE:11.0/8.0 failed {METHOD Any, URI Any, CONTENT Any}
-          |      Non matching headers : None
-          |      Non matching params  : None
+          |      Method  - Non matching : Any
+          |      Headers - Matching     : None
+          |      Headers - Non matching : None
+          |      Uri     - Non matching : Any
+          |      Params  - Matching     : None
+          |      Params  - Non matching : None
+          |      Content - Non matching : Any
       """.stripMargin.trim
     }
 
