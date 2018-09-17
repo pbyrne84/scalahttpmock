@@ -18,9 +18,9 @@ class VerificationFailure private[this] (message: String) extends RuntimeExcepti
            verificationResults: Seq[RequestVerificationResult]) =
     this(
       "*************************************\n" +
-        s"The following expectation as matched $actualTimesCalled out of $expectedTimesCalled times:-\n" +
+        s"The following expectation was matched $actualTimesCalled out of $expectedTimesCalled times:-\n" +
         expectation.prettyFormat +
-        "\nThe following requests were made:-\n" + verificationResults
+        s"\nThe following requests were made (${verificationResults.length}):-\n" + verificationResults
         .sortBy(_.allMatchResult.score.percentage)
         .reverse
         .map(_.prettifyVerification)
