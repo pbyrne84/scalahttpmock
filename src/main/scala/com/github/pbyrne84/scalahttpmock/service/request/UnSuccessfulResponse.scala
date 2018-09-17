@@ -29,7 +29,7 @@ case class UnSuccessfulResponse(request: Request[IO], allAttempts: Seq[AllMatchR
                      allAttempts
                        .sortBy(_.score.percentage)
                        .reverse
-                       .map(_.prettifyScoreWithFailedOverview)
+                       .map(_.prettifyResult)
                        .mkString("\n\n"),
                      indentFirstLine = true)
 

@@ -68,6 +68,10 @@ object MatchingScore {
 }
 
 case class MatchingScore private[expectation] (total: Double, possible: Double) {
+  def +(otherMatchingScore: MatchingScore): MatchingScore = {
+    MatchingScore(total + otherMatchingScore.total, possible + otherMatchingScore.possible)
+  }
+
   val isMatch: Boolean = {
     if (total > 0) {
       possible == total
@@ -98,15 +102,15 @@ case class AllMatchResult(headerMatchResults: Seq[HeaderMatchResult],
     def totalManyHasScores(scores: Seq[HasScore]) =
       scores.foldLeft(MatchingScore.empty) {
         case (total: MatchingScore, current: HasScore) =>
-          MatchingScore(total.total + current.matchingScore.total,
-                        total.possible + current.matchingScore.possible)
+          total + current.matchingScore
       }
 
-    def totalManyScores(scores: Seq[MatchingScore]) =
+    def totalManyScores(scores: Seq[MatchingScore]): MatchingScore = {
       scores.foldLeft(MatchingScore.empty) {
         case (total: MatchingScore, current: MatchingScore) =>
-          MatchingScore(total.total + current.total, total.possible + current.possible)
+          total + current
       }
+    }
 
     val headerTotal = totalManyHasScores(headerMatchResults)
     val paramTotal = totalManyHasScores(paramMatchResults)
@@ -122,28 +126,34 @@ case class AllMatchResult(headerMatchResults: Seq[HeaderMatchResult],
   val matches: Boolean =
     score.isMatch
 
-  val prettifyScoreWithFailedOverview: String =
-    new AllMatchResultPrettifier(this).prettifyScoreWithFailedOverview
+  private val prettifier = new AllMatchResultPrettifier(this)
+
+  lazy val prettifyResult: String = prettifier.prettifyResult
+
+  lazy val nonMatchingHeaders: Seq[HeaderMatchResult] = headerMatchResults.filter(!_.success)
+  lazy val matchingHeaders: Seq[HeaderMatchResult] = headerMatchResults.filter(_.success)
+  lazy val nonMatchingParams: Seq[ParamMatchResult] = paramMatchResults.filter(!_.success)
+  lazy val matchingParams: Seq[ParamMatchResult] = paramMatchResults.filter(_.success)
 
 }
 
 class AllMatchResultPrettifier private[expectation] (allMatchResult: AllMatchResult)
     extends Indentation {
 
-  def prettifyScoreWithFailedOverview: String = {
-    val failedHeaders = allMatchResult.headerMatchResults.filter(!_.success)
-    val failedParams = allMatchResult.paramMatchResults.filter(!_.success)
-    val invalidErrors = calculateInvalidErrors(failedHeaders, failedParams)
+  def prettifyResult: String = {
+    val invalidErrors = calculateInvalidErrors
 
     if (invalidErrors.isEmpty) {
       s"[SUCCESS] SCORE:${allMatchResult.score.possible}/${allMatchResult.score.total}"
     } else {
-      createInvalidMessage(failedHeaders, failedParams, invalidErrors)
+      createFailedRequestMessage(invalidErrors)
     }
   }
 
-  private def calculateInvalidErrors(failedHeaders: Seq[HeaderMatchResult],
-                                     failedParams: Seq[ParamMatchResult]) = {
+  private def calculateInvalidErrors: Vector[String] = {
+    val failedHeaders: Seq[HeaderMatchResult] = allMatchResult.nonMatchingHeaders
+    val failedParams: Seq[ParamMatchResult] = allMatchResult.nonMatchingParams
+
     Vector(
       mapError(allMatchResult.httpMethodMatchResult.success,
                s"METHOD ${allMatchResult.httpMethodMatchResult.httpMethodMatcher.prettyText}"),
@@ -152,7 +162,7 @@ class AllMatchResultPrettifier private[expectation] (allMatchResult: AllMatchRes
                s"URI ${allMatchResult.uriMatchResult.uriMatcher.prettyText}"),
       mapError(failedParams.isEmpty, s"PARAMS (failed ${failedParams.size})"),
       mapError(allMatchResult.contentMatchResult.success,
-               s"CONTENT ${allMatchResult.contentMatchResult.contentMatcher.prettyText}")
+               s"CONTENT ${allMatchResult.contentMatchResult.contentMatcher.shortDescription}")
     ).collect { case Some(error) => error }
   }
 
@@ -164,25 +174,49 @@ class AllMatchResultPrettifier private[expectation] (allMatchResult: AllMatchRes
     }
   }
 
-  private def createInvalidMessage(failedHeaders: Seq[HeaderMatchResult],
-                                   failedParams: Seq[ParamMatchResult],
-                                   invalidErrors: Vector[String]): String = {
-    def remapMultipleErrors(mismatches: Seq[PrettyText]) = {
+  private def createFailedRequestMessage(invalidErrors: Vector[String]): String = {
+    def remapMultiple(mismatches: Seq[PrettyText]) = {
       mapError(mismatches.isEmpty, s"""
-         |[ ${mismatches.map(x => x.prettyText).mkString(",\n")} ]
+                                      |[ ${mismatches.map(x => x.prettyText).mkString(",\n")} ]
         """.stripMargin.trim).getOrElse("None")
     }
 
-    val nonMatchingHeaders = remapMultipleErrors(failedHeaders.map(_.headerMatcher))
-    val nonMatchingParams = remapMultipleErrors(failedParams.map(_.paramMatcher))
+    val successfulMatchingHeadersText = remapMultiple(
+      allMatchResult.matchingHeaders.map(_.headerMatcher)
+    )
 
-    val indent = 27
+    val nonMatchingHeadersText = remapMultiple(
+      allMatchResult.nonMatchingHeaders.map(_.headerMatcher)
+    )
+    val successfulMatchingParamsText = remapMultiple(
+      allMatchResult.matchingParams.map(_.paramMatcher)
+    )
+    val nonMatchingParamsText = remapMultiple(allMatchResult.nonMatchingParams.map(_.paramMatcher))
+
+    def matchingOrNonMatching(isMAtching: Boolean) =
+      if (isMAtching) {
+        "Matching    "
+      } else {
+        "Non matching"
+      }
+
+    val methodMatchText = matchingOrNonMatching(allMatchResult.httpMethodMatchResult.success)
+    val uriMatchText = matchingOrNonMatching(allMatchResult.uriMatchResult.success)
+    val contentMatchText = matchingOrNonMatching(allMatchResult.contentMatchResult.success)
+
+    val indent = 29
     s"""
        |[INVALID] SCORE:${allMatchResult.score.possible}/${allMatchResult.score.total} failed {${invalidErrors
          .mkString(", ")}}
-       |  Non matching headers : ${indentNewLines(indent, nonMatchingHeaders)}
-       |  Non matching params  : ${indentNewLines(indent, nonMatchingParams)}
+       |  Method  - $methodMatchText : ${allMatchResult.httpMethodMatchResult.httpMethodMatcher.prettyText}
+       |  Headers - Matching     : ${indentNewLines(indent, successfulMatchingHeadersText)}
+       |  Headers - Non matching : ${indentNewLines(indent, nonMatchingHeadersText)}
+       |  Uri     - $uriMatchText : ${allMatchResult.uriMatchResult.uriMatcher.prettyText}
+       |  Params  - Matching     : ${indentNewLines(indent, successfulMatchingParamsText)}
+       |  Params  - Non matching : ${indentNewLines(indent, nonMatchingParamsText)}
+       |  Content - $contentMatchText : ${indentNewLines(2, {
+         allMatchResult.contentMatchResult.contentMatcher.prettyText
+       })}
       """.stripMargin.trim
   }
-
 }
