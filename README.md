@@ -69,6 +69,77 @@ expectation then switched to an exact match for the verification.
 Sometimes too tight matching required in the expectation leads to
 very hard to debug failures whereas a verification tends to be clear.
 
+E.g.
+```scala
+import com.github.pbyrne84.scalahttpmock.expectation.matcher.{JsonContentEquals, PostMatcher}
+import com.github.pbyrne84.scalahttpmock.expectation.{JsonResponse, ServiceExpectation}
+import com.github.pbyrne84.scalahttpmock.expectation.matcher.HeaderEquals
+import com.softwaremill.sttp.sttp
+import com.softwaremill.sttp._
+implicit val backend: SttpBackend[Id, Nothing] = HttpURLConnectionBackend()
+
+val port = 9000
+val service = MockServiceFactory.create(port)
+
+val responseJson = """{"a":"1"}"""
+val expectation = ServiceExpectation()
+    .addHeader(HeaderEquals("a", "avalue"))
+    .withMethod(PostMatcher())
+    .withUri("/test/path".asUriEquals)
+    .withResponse(JsonResponse(202, Some(responseJson))) // adds json header and allows for custom headers
+
+service.addExpectation(expectation)
+
+val uri = uri"http://localhost:$port/test/path"
+val request = sttp
+.post(uri)
+.header("a", "avalue")
+
+val response = request.send()
+
+response.code shouldBe 202
+response.unsafeBody shouldBe responseJson
+
+service.verifyCall(expectation.withMethod(PostMatcher(JsonContentEquals("""{ "z":"26" }""")))) //fails here
+```
+
+fails with the message
+```
+The following expectation was matched 0 out of 1 times:-
+ServiceExpectation[method="Post"](
+  Headers : [ Equals("a", "avalue") ],
+  Uri     : Uri equals "/test/path",
+  Params  : Any,
+  Body    : {
+    "z" : "26"
+  }
+)
+The following requests were made (1):-
+[INVALID] SCORE:4.0/3.0 failed {CONTENT Equals Json}
+  Method  - Matching     : Post
+  Headers - Matching     : [ Equals("a", "avalue") ]
+  Headers - Non matching : None
+  Uri     - Matching     : Uri equals "/test/path"
+  Params  - Matching     : None
+  Params  - Non matching : None
+  Content - Non matching : {
+    "z" : "26"
+  }
+Request[method="POST", path="/test/path"](
+  Uri     : "/test/path",
+  Params  : [],
+  Headers : [ ("Accept", "text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2"),
+              ("Accept-Encoding", "gzip, deflate"),
+              ("Connection", "keep-alive"),
+              ("Host", "localhost:9000"),
+              ("User-Agent", "Java/1.8.0_77"),
+              ("a", "avalue") ],
+  Body    : None
+)
+
+```
+
+
 #### Expecting a payload
 Payloads are bound to method matchers that accept payloads
 * PostMatcher
