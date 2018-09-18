@@ -138,7 +138,7 @@ class MatchingAttemptTest extends BaseSpec with TableDrivenPropertyChecks with O
         .paramMatchResults shouldBe paramMatches
     }
 
-    "not care about order and allow a combination of matching and equality failing on either" in {
+    "not care about order and allow a combination of matching and equality for params failing on either" in {
       val paramEqualsMatchers = Vector(
         ("y", "3"),
         ("x", "2")
@@ -452,7 +452,7 @@ class MatchingAttemptTest extends BaseSpec with TableDrivenPropertyChecks with O
         .headerMatchResults shouldBe headerMatches
     }
 
-    "not care about order and allow a combination of matching and equality failing on either" in {
+    "not care about order and allow a combination of matching and equality for headers failing on either" in {
       val headerEqualsMatchers = Vector(
         ("y", "3"),
         ("x", "2")
