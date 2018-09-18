@@ -3,7 +3,7 @@ package com.github.pbyrne84.scalahttpmock.expectation
 import com.github.pbyrne84.scalahttpmock.BaseSpec
 import com.github.pbyrne84.scalahttpmock.expectation.matcher._
 
-class AllMatchResultTest extends BaseSpec {
+class AllMatchResultSpec extends BaseSpec {
 
   "prettify result to be " should {
     "show failure where all single items have an empty score" in {

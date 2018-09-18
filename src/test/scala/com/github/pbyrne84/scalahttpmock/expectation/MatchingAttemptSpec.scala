@@ -6,7 +6,7 @@ import org.http4s.{Header, Headers, Method, Request}
 import org.scalatest.OptionValues
 import org.scalatest.prop.TableDrivenPropertyChecks
 
-class MatchingAttemptTest extends BaseSpec with TableDrivenPropertyChecks with OptionValues {
+class MatchingAttemptSpec extends BaseSpec with TableDrivenPropertyChecks with OptionValues {
 
   private val matchingAttempt = new MatchingAttempt
 

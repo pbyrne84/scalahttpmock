@@ -17,7 +17,7 @@ import org.http4s.Header
 import org.http4s.headers.Location
 import org.scalatest.BeforeAndAfter
 
-class TestServiceTest extends BaseSpec with BeforeAndAfter {
+class TestServiceSpec extends BaseSpec with BeforeAndAfter {
 
   private val port = 9001
   private val service = new MockService(port)
