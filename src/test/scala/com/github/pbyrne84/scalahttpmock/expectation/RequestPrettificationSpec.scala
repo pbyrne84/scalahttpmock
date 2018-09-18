@@ -3,7 +3,7 @@ package com.github.pbyrne84.scalahttpmock.expectation
 import com.github.pbyrne84.scalahttpmock.BaseSpec
 import org.http4s.{Header, Headers}
 
-class RequestPrettificationTest extends BaseSpec {
+class RequestPrettificationSpec extends BaseSpec {
 
   import RequestPrettification._
 

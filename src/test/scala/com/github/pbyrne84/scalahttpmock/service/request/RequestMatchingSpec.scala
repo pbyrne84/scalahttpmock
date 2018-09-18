@@ -8,7 +8,7 @@ import com.github.pbyrne84.scalahttpmock.expectation.{
 }
 import org.scalatest.BeforeAndAfter
 
-class RequestMatchingTest extends BaseSpec with BeforeAndAfter {
+class RequestMatchingSpec extends BaseSpec with BeforeAndAfter {
 
   private val matchingAttempt: MatchingAttempt = mock[MatchingAttempt]
   private val requestMatching = new RequestMatching(matchingAttempt)
