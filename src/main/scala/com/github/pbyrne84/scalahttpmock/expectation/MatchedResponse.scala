@@ -50,7 +50,7 @@ trait MatchedResponseWithPotentialBody extends MatchedResponse {
 
 trait JsonContentType { self: MatchedResponseWithPotentialBody =>
   override val contentTypeHeader: `Content-Type` =
-    `Content-Type`(MediaType.`application/json`)
+    `Content-Type`(MediaType.application.json)
 }
 
 case class JsonResponse(statusCode: Int,

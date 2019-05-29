@@ -10,24 +10,13 @@ import com.github.pbyrne84.scalahttpmock.expectation.{
 }
 import com.github.pbyrne84.scalahttpmock.service.request.UnSuccessfulResponse
 import com.typesafe.scalalogging.StrictLogging
-import org.http4s.dsl.impl.{
-  EmptyResponseGenerator,
-  EntityResponseGenerator,
-  LocationResponseGenerator
-}
+import fs2.{text, Stream}
 import org.http4s.headers.`Content-Type`
-import org.http4s.{MediaType, Request, Response, Status}
+import org.http4s.{Headers, MediaType, Request, Response, Status}
 
 import scala.collection.immutable.Seq
 
 object ResponseRemapping extends StrictLogging {
-  import org.http4s.dsl.io._
-
-  class EntityResponseOps[F[_]](val status: Status) extends AnyVal with EntityResponseGenerator[F]
-  class EmptyResponseOps[F[_]](val status: Status) extends AnyVal with EmptyResponseGenerator[F]
-  class LocationResponseOps[F[_]](val status: Status)
-      extends AnyVal
-      with LocationResponseGenerator[F]
 
   private[scalahttpmock] def respondSuccessfully(
       matchedResponse: MatchedResponse
@@ -36,8 +25,7 @@ object ResponseRemapping extends StrictLogging {
       case responseWithPotentialBody: MatchedResponseWithPotentialBody =>
         responseWithPotentialBody.maybeBody match {
           case Some(body) =>
-            new EntityResponseOps(matchedResponse.status)
-              .apply(body)
+            IO(Response(matchedResponse.status, body = Stream(body).through(text.utf8Encode)))
 
           case _ =>
             IO(Response(matchedResponse.status))
@@ -45,8 +33,7 @@ object ResponseRemapping extends StrictLogging {
         }
 
       case emptyResponse: EmptyResponse =>
-        new EmptyResponseOps(emptyResponse.status)
-          .apply()
+        IO(Response(emptyResponse.status))
 
       case locationResponse: LocationResponse =>
         IO(Response(locationResponse.status))
@@ -55,7 +42,8 @@ object ResponseRemapping extends StrictLogging {
         IO(Response(matchedResponse.status))
     }
 
-    finalResponse.putHeaders(matchedResponse.allHeaders: _*)
+    finalResponse.map(_.copy(headers = Headers.of(matchedResponse.allHeaders: _*)))
+
   }
 
   private[scalahttpmock] def respondUnSuccessfully(
@@ -65,11 +53,14 @@ object ResponseRemapping extends StrictLogging {
     val unSuccessfulResponse = UnSuccessfulResponse(request, allAttempts)
     logger.warn(unSuccessfulResponse.prettyFormat)
 
-    val httpResponse: IO[Response[IO]] = new EntityResponseOps(Status.NotImplemented)
-      .apply(unSuccessfulResponse.asErrorJson.spaces2)
+    val httpResponse: IO[Response[IO]] =
+      IO(
+        Response(Status.NotImplemented,
+                 body = Stream(unSuccessfulResponse.asErrorJson.spaces2).through(text.utf8Encode))
+      )
 
     //Type is mangled if this is joined by a fluent interface
-    httpResponse.putHeaders(`Content-Type`(MediaType.`application/json`))
+    httpResponse.map(_.copy(headers = Headers.of(`Content-Type`(MediaType.application.json))))
   }
 
 }
