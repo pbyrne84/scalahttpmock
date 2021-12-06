@@ -6,6 +6,7 @@ import com.github.pbyrne84.scalahttpmock.expectation.{MatchingAttempt, ServiceEx
 import com.github.pbyrne84.scalahttpmock.service.request.RequestMatching
 import com.github.pbyrne84.scalahttpmock.service.response.ResponseRemapping
 import com.typesafe.scalalogging.LazyLogging
+import fs2.Stream
 import org.http4s._
 import org.http4s.headers.{`Content-Length`, Connection}
 import org.http4s.implicits._
@@ -41,28 +42,42 @@ class MockService private[service] (port: Int) extends IOApp with LazyLogging {
     .orNotFound
 
   private def DefaultServiceErrorHandler[F[_]](implicit F: Monad[F]): ServiceErrorHandler[F] =
-    req => {
+    (req: Request[F]) => {
       case mf: MessageFailure =>
         messageFailureLogger.debug(mf)(
           s"""Message failure handling request: ${req.method} ${req.pathInfo} from ${req.remoteAddr
             .getOrElse("<unknown>")}"""
         )
-        mf.toHttpResponse(req.httpVersion)
-      case t if !t.isInstanceOf[VirtualMachineError] =>
-        serviceErrorLogger.error(t)(
-          s"""Error servicing request: ${req.method} ${req.pathInfo} from ${req.remoteAddr
-            .getOrElse(
-              "<unknown>"
-            )}"""
-        )
 
         F.pure(
-          Response(Status.NotFound,
+          Response(Status.BadRequest,
                    req.httpVersion,
                    Headers.of(
                      Connection("close".ci),
                      `Content-Length`.zero
                    ))
+        )
+
+      case t if !t.isInstanceOf[VirtualMachineError] =>
+        val errorMessage =
+          s"""Error servicing request: ${req.method} ${req.pathInfo} from ${req.remoteAddr
+            .getOrElse("<unknown>")}"""
+
+        serviceErrorLogger.error(t)(errorMessage)
+
+        F.pure(
+          Response(
+            status = Status.NotFound,
+            httpVersion = req.httpVersion,
+            headers = Headers.of(
+              Connection("close".ci),
+              `Content-Length`
+                .fromLong(errorMessage.length)
+                .toOption
+                .getOrElse(`Content-Length`.zero)
+            ),
+            body = Stream.empty
+          )
         )
 
     }
