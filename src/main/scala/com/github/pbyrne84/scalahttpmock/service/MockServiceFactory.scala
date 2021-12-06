@@ -13,8 +13,6 @@ import org.http4s.implicits._
 import org.http4s.server.ServiceErrorHandler
 import org.log4s.getLogger
 
-import scala.language.higherKinds
-
 class MockService private[service] (port: Int) extends IOApp with LazyLogging {
   private[this] val requestMatching = new RequestMatching(new MatchingAttempt)
   private[this] val messageFailureLogger = getLogger("org.http4s.server.message-failures")
