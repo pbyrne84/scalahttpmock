@@ -59,7 +59,7 @@ class ZioMockService private[service] (port: Int) extends App with LazyLogging {
   def shutDown(): Unit = {} //server.shutdownNow()
 }
 
-object MockServiceFactory {
+object ZioMockServiceFactory {
 
   def create(port: Int): MockService = new MockService(port)
 }

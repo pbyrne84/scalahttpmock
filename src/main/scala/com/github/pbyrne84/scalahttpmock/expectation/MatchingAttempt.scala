@@ -2,6 +2,7 @@ package com.github.pbyrne84.scalahttpmock.expectation
 
 import cats.effect.IO
 import com.github.pbyrne84.scalahttpmock.expectation.matcher._
+import org.http4s.Uri.Path
 import org.http4s.util.CaseInsensitiveString
 import org.http4s.{Header, Request}
 
@@ -60,21 +61,22 @@ class MatchingAttempt {
   private def tryMatchingUrl(expectation: ServiceExpectation,
                              request: Request[IO]): UriMatchResult = {
 
+    val path: Path = request.uri.path
+    val pathWithParams: String = request.uri.asPathWithParams
+
     val matchingScore: MatchingScore = expectation.uriMatcher match {
       case AnyUriMatcher => MatchingScore.success(AnyUriMatcher.maxScore)
 
-      case pathEquals: PathEquals if pathEquals.path == request.uri.path =>
+      case pathEquals: PathEquals if pathEquals.path == path =>
         MatchingScore.success(pathEquals.maxScore)
 
-      case pathMatches: PathMatches
-          if pathMatches.pathRegex.findFirstIn(request.uri.path).isDefined =>
+      case pathMatches: PathMatches if pathMatches.pathRegex.findFirstIn(path).isDefined =>
         MatchingScore.success(pathMatches.maxScore)
 
-      case uriEquals: UriEquals if uriEquals.uri == request.uri.asPathWithParams =>
+      case uriEquals: UriEquals if uriEquals.uri == pathWithParams =>
         MatchingScore.success(uriEquals.maxScore)
 
-      case uriMatches: UriMatches
-          if uriMatches.uriRegex.findFirstIn(request.uri.asPathWithParams).isDefined =>
+      case uriMatches: UriMatches if uriMatches.uriRegex.findFirstIn(pathWithParams).isDefined =>
         MatchingScore.success(uriMatches.maxScore)
 
       case _ => MatchingScore(0, 1)
