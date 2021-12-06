@@ -13,8 +13,7 @@ libraryDependencies ++= Seq(
   "org.http4s" %% "http4s-dsl" % http4sVersion,
   "org.http4s" %% "http4s-blaze-server" % http4sVersion,
   "org.http4s" %% "http4s-blaze-client" % http4sVersion,
-  "org.http4s" %% "http4s-circe" % http4sVersion,
-  // "io.d11" %% "zhttp" % "1.0.0.0-RC17",
+  "io.d11" %% "zhttp" % "1.0.0.0-RC17",
   // Optional for auto-derivation of JSON codecs
   "io.circe" %% "circe-generic" % circeVersion,
   // Optional for string interpolation to JSON model
