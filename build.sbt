@@ -9,6 +9,8 @@ scalaVersion := "2.13.1"
 val http4sVersion = "0.21.0"
 val circeVersion = "0.12.0"
 
+mainClass := Some("com.github.pbyrne84.scalahttpmock.service.HelloWorldAdvanced")
+
 libraryDependencies ++= Seq(
   "org.http4s" %% "http4s-dsl" % http4sVersion,
   "org.http4s" %% "http4s-blaze-server" % http4sVersion,
@@ -30,4 +32,4 @@ libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
 
 libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
 
-libraryDependencies += "org.clapper" %% "classutil" % "1.5.0" % Provided
+libraryDependencies += "org.clapper" %% "classutil" % "1.5.0"

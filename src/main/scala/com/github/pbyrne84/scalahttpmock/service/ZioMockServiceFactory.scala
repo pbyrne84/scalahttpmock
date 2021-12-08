@@ -1,11 +1,7 @@
 package com.github.pbyrne84.scalahttpmock.service
 
 import cats.effect
-import com.github.pbyrne84.scalahttpmock.expectation.{
-  MatchedResponse,
-  MatchingAttempt,
-  ServiceExpectation
-}
+import com.github.pbyrne84.scalahttpmock.expectation.{MatchedResponse, MatchingAttempt, ServiceExpectation}
 import com.github.pbyrne84.scalahttpmock.service.request.{RequestMatching, ZioRequestConvertor}
 import com.github.pbyrne84.scalahttpmock.service.response.ResponseRemapping
 import com.typesafe.scalalogging.LazyLogging
@@ -14,15 +10,16 @@ import org.http4s
 import org.http4s.EntityBody
 import org.log4s.getLogger
 import zhttp.http._
-import zhttp.service.Server
+import zhttp.service.server.ServerChannelFactory
+import zhttp.service.{EventLoopGroup, Server}
 import zio._
 
 import java.nio.charset.Charset
 
-class ZioMockService private[service] (port: Int) extends App with LazyLogging {
-  private[this] val requestMatching = new RequestMatching(new MatchingAttempt)
-  private[this] val messageFailureLogger = getLogger("org.http4s.server.message-failures")
-  private[this] val serviceErrorLogger = getLogger("org.http4s.server.service-errors")
+class ZioMockService private[ service ]( port: Int ) extends App with LazyLogging {
+  private[ this ] val requestMatching      = new RequestMatching( new MatchingAttempt )
+  private[ this ] val messageFailureLogger = getLogger( "org.http4s.server.message-failures" )
+  private[ this ] val serviceErrorLogger   = getLogger( "org.http4s.server.service-errors" )
 
   private val zioRequestConvertor = new ZioRequestConvertor()
 
@@ -53,7 +50,7 @@ class ZioMockService private[service] (port: Int) extends App with LazyLogging {
       }
 
       val response = Response.HttpResponse(
-        status = zioRequestConvertor.http4StatusToZHTTPStatus(http4sResponse.status.code),
+        status = zioRequestConvertor.http4StatusToZHTTPStatus( http4sResponse.status.code ),
         headers = headers,
         content = bodyContent
       )
@@ -61,21 +58,46 @@ class ZioMockService private[service] (port: Int) extends App with LazyLogging {
       response
   }
 
-  override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] =
-    Server.start(8090, app).exitCode
+  override def run( args: List[ String ] ): URIO[ zio.ZEnv, ExitCode ] = {
 
-  def reset(): Unit = requestMatching.reset()
+    val nThreads: Int = 10 //args.headOption.flatMap(x => Try(x.toInt).toOption).getOrElse(0)
 
-  def addExpectation(expectation: ServiceExpectation): Unit =
-    requestMatching.addExpectation(expectation)
+    val server =
+      Server.port( port ) ++ // Setup port
+        Server.paranoidLeakDetection ++ // Paranoid leak detection (affects performance)
+        Server.app( app )
 
-  def verifyCall(expectation: ServiceExpectation, expectedTimes: Int = 1): Unit =
-    requestMatching.verifyCall(expectation, expectedTimes)
+    // Create a new server
+    server.make
+      .use(
+        _ =>
+          // Waiting for the server to start
+          console.putStrLn( s"Server started on port $port" )
 
-  def shutDown(): Unit = {} //server.shutdownNow()
+            // Ensures the server doesn't die after printing
+            *> ZIO.never,
+      )
+      .provideCustomLayer( ServerChannelFactory.auto ++ EventLoopGroup.auto( nThreads ) )
+      .exitCode
+  }
+
+  def reset( ): Unit = requestMatching.reset()
+
+  def addExpectation( expectation: ServiceExpectation ): Unit =
+    requestMatching.addExpectation( expectation )
+
+  def verifyCall( expectation: ServiceExpectation, expectedTimes: Int = 1 ): Unit =
+    requestMatching.verifyCall( expectation, expectedTimes )
+
+  def shutDown( ): Unit = {} //server.shutdownNow()
 }
 
 object ZioMockServiceFactory {
 
-  def create(port: Int): ZioMockService = new ZioMockService(port)
+  def create( port: Int ): ZioMockService = new ZioMockService( port )
+
+  def main( args: Array[ String ] ): Unit = {
+    println( new ZioMockService( 8090 ).run( List.empty )
+  }
+
 }
