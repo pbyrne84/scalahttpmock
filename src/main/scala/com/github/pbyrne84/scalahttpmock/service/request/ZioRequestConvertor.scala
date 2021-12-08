@@ -1,9 +1,10 @@
 package com.github.pbyrne84.scalahttpmock.service.request
 
 import cats.effect.IO
+import io.netty.handler.codec.http.HttpResponseStatus
 import org.http4s
 import org.http4s.Uri
-import zhttp.http.{Header, Method, Request}
+import zhttp.http.{Header, Method, Request, Status}
 
 class ZioRequestConvertor {
   def convert(zRequest: Request): org.http4s.Request[IO] = {
@@ -35,5 +36,9 @@ class ZioRequestConvertor {
       .unsafeRunSync()
   }
 
-  protected def createRequest: org.http4s.Request[IO] = org.http4s.Request()
+  private def createRequest: org.http4s.Request[IO] = org.http4s.Request()
+
+  def http4StatusToZHTTPStatus(statusInt: Int): Status =
+    Status.fromJHttpResponseStatus(HttpResponseStatus.valueOf(statusInt))
+
 }

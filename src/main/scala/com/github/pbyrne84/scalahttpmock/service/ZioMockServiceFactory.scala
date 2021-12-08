@@ -1,52 +1,68 @@
 package com.github.pbyrne84.scalahttpmock.service
 
-import com.github.pbyrne84.scalahttpmock.expectation.{MatchingAttempt, ServiceExpectation}
-import com.github.pbyrne84.scalahttpmock.service.request.RequestMatching
+import cats.effect
+import com.github.pbyrne84.scalahttpmock.expectation.{
+  MatchedResponse,
+  MatchingAttempt,
+  ServiceExpectation
+}
+import com.github.pbyrne84.scalahttpmock.service.request.{RequestMatching, ZioRequestConvertor}
+import com.github.pbyrne84.scalahttpmock.service.response.ResponseRemapping
 import com.typesafe.scalalogging.LazyLogging
+import io.netty.buffer.Unpooled
+import org.http4s
+import org.http4s.EntityBody
 import org.log4s.getLogger
 import zhttp.http._
 import zhttp.service.Server
 import zio._
+
+import java.nio.charset.Charset
 
 class ZioMockService private[service] (port: Int) extends App with LazyLogging {
   private[this] val requestMatching = new RequestMatching(new MatchingAttempt)
   private[this] val messageFailureLogger = getLogger("org.http4s.server.message-failures")
   private[this] val serviceErrorLogger = getLogger("org.http4s.server.service-errors")
 
-  val app: Http[Any, Nothing, Request, UResponse] = Http.collect[Request] {
-    case Method.GET -> Root / "text" => Response.text("Hello World!")
-  }
+  private val zioRequestConvertor = new ZioRequestConvertor()
 
-  val matchingCall: PartialFunction[Request, UResponse] = new PartialFunction[Request, UResponse] {
-    def apply(x: Request) = Response.text("Hello World!")
+  private val app: Http[Any, Nothing, Request, UResponse] = Http.collect[Request] {
+    case request: Request =>
+      val convertedRequest = zioRequestConvertor.convert(request)
+      val potentialResponse = requestMatching.resolveResponse(convertedRequest)
 
-    def isDefinedAt(x: Request) = true
-  }
+      val http4sResponse = potentialResponse.maybeResponse
+        .map((response: MatchedResponse) => ResponseRemapping.respondSuccessfully(response))
+        .getOrElse(
+          ResponseRemapping.respondUnSuccessfully(convertedRequest, potentialResponse.allAttempts)
+        )
+        .unsafeRunSync()
 
-  val app2: Http[Any, Nothing, Request, UResponse] = Http.collect[Request].apply {
-    matchingCall
+      val body: EntityBody[effect.IO] = http4sResponse.body
+
+      val bodyContent = body.compile.toVector.unsafeRunSync match {
+        case content if content.nonEmpty =>
+          HttpData.fromByteBuf(Unpooled.copiedBuffer(content.mkString, Charset.forName("UTF-8")))
+
+        case _ =>
+          HttpData.empty
+      }
+
+      val headers = http4sResponse.headers.toList.map { header: http4s.Header =>
+        Header(header.name, header.value)
+      }
+
+      val response = Response.HttpResponse(
+        status = zioRequestConvertor.http4StatusToZHTTPStatus(http4sResponse.status.code),
+        headers = headers,
+        content = bodyContent
+      )
+
+      response
   }
 
   override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] =
-    Server.start(8090, app2).exitCode
-
-  //  private val mockINGHttpService = HttpRoutes
-  //    .of[IO] {
-  //      case request: Request[IO] =>
-  //        val potentialResponse = requestMatching
-  //          .resolveResponse(request)
-  //
-  //        potentialResponse.maybeResponse
-  //          .map(response => ResponseRemapping.respondSuccessfully(response))
-  //          .getOrElse(
-  //            ResponseRemapping.respondUnSuccessfully(request, potentialResponse.allAttempts)
-  //          )
-  //
-  //      case unknown =>
-  //        messageFailureLogger.info(s"failed matching request\n$unknown")
-  //        IO(Response(Status.NotImplemented))
-  //    }
-  //    .orNotFound
+    Server.start(8090, app).exitCode
 
   def reset(): Unit = requestMatching.reset()
 
@@ -61,5 +77,5 @@ class ZioMockService private[service] (port: Int) extends App with LazyLogging {
 
 object ZioMockServiceFactory {
 
-  def create(port: Int): MockService = new MockService(port)
+  def create(port: Int): ZioMockService = new ZioMockService(port)
 }
