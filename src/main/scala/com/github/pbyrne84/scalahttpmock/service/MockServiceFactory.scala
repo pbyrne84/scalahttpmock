@@ -47,7 +47,10 @@ class MockService private[service] (port: Int) extends IOApp with LazyLogging {
           s"""Message failure handling request: ${req.method} ${req.pathInfo} from ${req.remoteAddr
             .getOrElse("<unknown>")}"""
         )
-        mf.toHttpResponse(req.httpVersion)
+        //Compiler cannot guess it is Response[F] and goes nutty
+        val messageFailureResponse: Response[F] = mf.toHttpResponse(req.httpVersion)
+        F.pure(messageFailureResponse)
+
       case t if !t.isInstanceOf[VirtualMachineError] =>
         serviceErrorLogger.error(t)(
           s"""Error servicing request: ${req.method} ${req.pathInfo} from ${req.remoteAddr
@@ -56,7 +59,7 @@ class MockService private[service] (port: Int) extends IOApp with LazyLogging {
             )}"""
         )
 
-        F.pure(
+        val value: F[Response[F]] = F.pure(
           Response(Status.NotFound,
                    req.httpVersion,
                    Headers.of(
@@ -64,6 +67,7 @@ class MockService private[service] (port: Int) extends IOApp with LazyLogging {
                      `Content-Length`.zero
                    ))
         )
+        value
 
     }
 
