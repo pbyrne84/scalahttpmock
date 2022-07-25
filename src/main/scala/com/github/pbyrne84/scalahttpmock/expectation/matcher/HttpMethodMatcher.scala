@@ -48,14 +48,14 @@ case object GetMatcher extends HttpMethodMatcher {
 }
 
 case object DeleteMatcher extends HttpMethodMatcher {
-  override val maybeMethod = Some(DELETE)
+  override val maybeMethod: Option[Method] = Some(DELETE)
   override val prettyText: String = "Delete"
   override val bodyPrettyText: String = "Ignored"
 }
 
 case class PostMatcher(content: ContentMatcher = AnyContentMatcher)
     extends HasContentHttpMethodMatcher {
-  override val maybeMethod = Some(POST)
+  override val maybeMethod: Option[Method] = Some(POST)
   override val prettyText: String = "Post"
   override val bodyPrettyText: String = content.prettyText
 }

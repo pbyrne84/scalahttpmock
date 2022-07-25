@@ -10,13 +10,14 @@ class RequestPrettificationSpec extends BaseSpec {
   "RequestPrettification" should {
 
     "format a default entry" in {
-      createRequest.prettyFormat shouldBe
+      createRequest.asMatchable.prettyFormat shouldBe
         """
           |Request[method="GET", path="/"](
-          |  Uri     : "/",
-          |  Params  : [],
-          |  Headers : [],
-          |  Body    : None
+          |  Uri            : "/",
+          |  PathWithParams : "/",
+          |  Params         : [],
+          |  Headers        : [],
+          |  Body           : None
           |)
           |""".stripMargin.trim
     }
@@ -25,20 +26,22 @@ class RequestPrettificationSpec extends BaseSpec {
       val uriText = "http://xxx.com/a/b/c?f=1&d=2&e=&e=10"
       val actual = createRequest
         .withUri(uriText.asUri)
+        .asMatchable
         .prettyFormat
 
       actual shouldBe
         s"""
-          |Request[method="GET", path="/a/b/c"](
-          |  Uri     : "$uriText",
-          |  Params  : [ ("d", "2"),
-          |              ("e", ""),
-          |              ("e", "10"),
-          |              ("f", "1") ],
-          |  Headers : [],
-          |  Body    : None
-          |)
-          |""".stripMargin.trim
+           |Request[method="GET", path="/a/b/c"](
+           |  Uri            : "$uriText",
+           |  PathWithParams : "/a/b/c?f=1&d=2&e=&e=10",
+           |  Params         : [ ("d", "2"),
+           |                     ("e", ""),
+           |                     ("e", "10"),
+           |                     ("f", "1") ],
+           |  Headers        : [],
+           |  Body           : None
+           |)
+           |""".stripMargin.trim
 
     }
 
@@ -52,19 +55,20 @@ class RequestPrettificationSpec extends BaseSpec {
         )
       )
 
-      val actual = createRequest.withHeaders(headers).prettyFormat
+      val actual = createRequest.withHeaders(headers).asMatchable.prettyFormat
       actual shouldBe
         s"""
-          |Request[method="GET", path="/"](
-          |  Uri     : "/",
-          |  Params  : [],
-          |  Headers : [ ("d", "2"),
-          |              ("e", ""),
-          |              ("e", "10"),
-          |              ("f", "1") ],
-          |  Body    : None
-          |)
-          |""".stripMargin.trim
+           |Request[method="GET", path="/"](
+           |  Uri            : "/",
+           |  PathWithParams : "/",
+           |  Params         : [],
+           |  Headers        : [ ("d", "2"),
+           |                     ("e", ""),
+           |                     ("e", "10"),
+           |                     ("f", "1") ],
+           |  Body           : None
+           |)
+           |""".stripMargin.trim
 
     }
 
@@ -72,18 +76,20 @@ class RequestPrettificationSpec extends BaseSpec {
       val actual = createRequest
         .withBody("content")
         .unsafeRunSync()
+        .asMatchable
         .prettyFormat
 
       actual shouldBe
         s"""
-          |Request[method="GET", path="/"](
-          |  Uri     : "/",
-          |  Params  : [],
-          |  Headers : [ ("Content-Length", "7"),
-          |              ("Content-Type", "text/plain; charset=UTF-8") ],
-          |  Body    : content
-          |)
-          |""".stripMargin.trim
+           |Request[method="GET", path="/"](
+           |  Uri            : "/",
+           |  PathWithParams : "/",
+           |  Params         : [],
+           |  Headers        : [ ("Content-Length", "7"),
+           |                     ("Content-Type", "text/plain; charset=UTF-8") ],
+           |  Body           : Some(content)
+           |)
+           |""".stripMargin.trim
 
     }
 

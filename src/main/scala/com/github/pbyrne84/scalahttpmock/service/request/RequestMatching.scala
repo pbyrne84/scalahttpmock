@@ -1,14 +1,12 @@
 package com.github.pbyrne84.scalahttpmock.service.request
-import cats.effect.IO
 import com.github.pbyrne84.scalahttpmock.expectation.{
   AllMatchResult,
+  MatchableRequest,
   MatchedResponse,
   MatchingAttempt,
   ServiceExpectation
 }
-import org.http4s.Request
 
-import scala.collection.immutable.Seq
 import scala.collection.mutable.ListBuffer
 class VerificationFailure private[this] (message: String) extends RuntimeException(message) {
 
@@ -33,7 +31,7 @@ case class PotentialResponse(maybeResponse: Option[MatchedResponse],
                              successfulMatches: Seq[AllMatchResult],
                              allAttempts: Seq[AllMatchResult])
 
-case class RequestVerificationResult(request: Request[IO], allMatchResult: AllMatchResult) {
+case class RequestVerificationResult(request: MatchableRequest, allMatchResult: AllMatchResult) {
   val matches: Boolean = allMatchResult.matches
 
   import com.github.pbyrne84.scalahttpmock.expectation.RequestPrettification._
@@ -46,9 +44,13 @@ case class RequestVerificationResult(request: Request[IO], allMatchResult: AllMa
 class RequestMatching(matchingAttempt: MatchingAttempt) {
 
   private val expectations: ListBuffer[ServiceExpectation] = ListBuffer.empty[ServiceExpectation]
-  private val serviceRequests: ListBuffer[Request[IO]] = ListBuffer.empty[Request[IO]]
+  private val serviceRequests: ListBuffer[MatchableRequest] = ListBuffer.empty[MatchableRequest]
 
   case class MatchWithResponse(result: AllMatchResult, expectationResponse: MatchedResponse)
+
+  override def toString: String = {
+    expectations.toList.map((expatation: ServiceExpectation) => expatation.toString).mkString("\n")
+  }
 
   private val root = org.slf4j.LoggerFactory
     .getLogger("ROOT")
@@ -59,7 +61,7 @@ class RequestMatching(matchingAttempt: MatchingAttempt) {
   def addExpectations(serviceExpectations: Seq[ServiceExpectation]): Unit =
     expectations ++= serviceExpectations
 
-  def resolveResponse(request: Request[IO]): PotentialResponse = {
+  def resolveResponse(request: MatchableRequest): PotentialResponse = {
     serviceRequests += request
 
     val attempts: List[MatchWithResponse] = expectations.toList.map {

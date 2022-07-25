@@ -6,17 +6,18 @@ import com.github.pbyrne84.scalahttpmock.expectation.{
   AllMatchResult,
   ContentMatchResult,
   HttpMethodMatchResult,
+  MatchableRequest,
   MatchingScore,
   UriMatchResult
 }
 import org.http4s.{Header, Request, Uri}
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.should.Matchers
 
-import scala.collection.immutable.Seq
 import scala.language.implicitConversions
 
-class BaseSpec extends WordSpec with Matchers with MockFactory {
+class BaseSpec extends AnyWordSpec with Matchers with MockFactory {
 
   implicit class StringAsMatcher(string: String) {
     def asUri: Uri = Uri.unsafeFromString(string)
@@ -55,6 +56,10 @@ class BaseSpec extends WordSpec with Matchers with MockFactory {
       shouldHaveEntry(expected.name.value, expected.value)
     }
 
+  }
+
+  implicit class RequestIOOps(http4sRequest: Request[IO]) {
+    val asMatchable: MatchableRequest = MatchableRequest.fromRequestIO(http4sRequest)
   }
 
   protected def createRequest: Request[IO] = Request()

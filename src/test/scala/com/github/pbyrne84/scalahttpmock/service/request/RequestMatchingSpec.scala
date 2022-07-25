@@ -20,16 +20,18 @@ class RequestMatchingSpec extends BaseSpec with BeforeAndAfter {
   "resolve response" should {
 
     "return empty response with empty matches when no expectations are set up" in {
-      requestMatching.resolveResponse(createRequest) shouldBe PotentialResponse(None,
-                                                                                Vector(),
-                                                                                Vector())
+      requestMatching.resolveResponse(createRequest.asMatchable) shouldBe PotentialResponse(
+        None,
+        Vector(),
+        Vector()
+      )
     }
 
     "not match when there is a single expectation that does not have a score that equals to a match" in {
       val expectation = ServiceExpectation()
       requestMatching.addExpectation(expectation)
 
-      val request = createRequest
+      val request = createRequest.asMatchable
       val unsuccessfulMatchResult = createAnyAllMatchResult
 
       (matchingAttempt.tryMatching _)
@@ -49,7 +51,7 @@ class RequestMatchingSpec extends BaseSpec with BeforeAndAfter {
 
       requestMatching.addExpectations(List(nonMatchingExpectation, matchingExpectation))
 
-      val request = createRequest
+      val request = createRequest.asMatchable
       val unsuccessfulMatchResult = createAnyAllMatchResult
       val successfulMatchResult = createSuccessfulMatchResult(10)
 
@@ -85,7 +87,7 @@ class RequestMatchingSpec extends BaseSpec with BeforeAndAfter {
         )
       )
 
-      val request = createRequest
+      val request = createRequest.asMatchable
       val unsuccessfulMatchResult = createAnyAllMatchResult
       val successfulMatchResultWithLowerScore = createSuccessfulMatchResult(10)
       val successfulMatchResultWithHigherScore = createSuccessfulMatchResult(20)
@@ -120,9 +122,9 @@ class RequestMatchingSpec extends BaseSpec with BeforeAndAfter {
     }
 
     "raise an error when there are calls and none match" in {
-      val request1 = createRequest
+      val request1 = createRequest.asMatchable
       requestMatching.resolveResponse(request1)
-      val request2 = createRequest
+      val request2 = createRequest.asMatchable
       requestMatching.resolveResponse(request2)
 
       val verifyExpectation = ServiceExpectation(httpMethodMatcher = HttpMethodMatcher.postMatcher)
@@ -141,9 +143,9 @@ class RequestMatchingSpec extends BaseSpec with BeforeAndAfter {
     }
 
     "not raise an error when there are calls and one matches" in {
-      val request1 = createRequest
+      val request1 = createRequest.asMatchable
       requestMatching.resolveResponse(request1)
-      val request2 = createRequest
+      val request2 = createRequest.asMatchable
       requestMatching.resolveResponse(request2)
 
       val verifyExpectation = ServiceExpectation(httpMethodMatcher = HttpMethodMatcher.postMatcher)
@@ -160,9 +162,9 @@ class RequestMatchingSpec extends BaseSpec with BeforeAndAfter {
     }
 
     "error when there are calls and one matches but it is supposed to match twice" in {
-      val request1 = createRequest
+      val request1 = createRequest.asMatchable
       requestMatching.resolveResponse(request1)
-      val request2 = createRequest
+      val request2 = createRequest.asMatchable
       requestMatching.resolveResponse(request2)
 
       val verifyExpectation = ServiceExpectation(httpMethodMatcher = HttpMethodMatcher.postMatcher)
@@ -179,9 +181,9 @@ class RequestMatchingSpec extends BaseSpec with BeforeAndAfter {
     }
 
     "not error when the expectation does actually match 2 requests" in {
-      val request1 = createRequest
+      val request1 = createRequest.asMatchable
       requestMatching.resolveResponse(request1)
-      val request2 = createRequest
+      val request2 = createRequest.asMatchable
       requestMatching.resolveResponse(request2)
       requestMatching.resolveResponse(request2)
 

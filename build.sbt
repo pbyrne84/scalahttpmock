@@ -7,7 +7,7 @@ version := "0.1-SNAPSHOT"
 scalaVersion := "2.13.8"
 
 val http4sVersion = "0.21.0"
-val circeVersion  = "0.13.0"
+val circeVersion = "0.13.0"
 
 libraryDependencies ++= Seq(
   "org.http4s" %% "http4s-dsl" % http4sVersion,

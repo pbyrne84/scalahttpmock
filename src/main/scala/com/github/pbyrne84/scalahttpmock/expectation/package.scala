@@ -1,4 +1,5 @@
 package com.github.pbyrne84.scalahttpmock
+import org.eclipse.jetty.server.Request
 import org.http4s.Uri
 
 package object expectation {
@@ -14,6 +15,17 @@ package object expectation {
         .getOrElse(0)
 
       uri.renderString.substring(protocolLength + hostLength + portLength)
+    }
+  }
+
+  implicit class RequestOps(request: Request) {
+    def asPathWithParams: String = {
+      val path = request.getPathInfo
+      Option(request.getQueryString)
+        .map { queryString =>
+          s"$path?$queryString"
+        }
+        .getOrElse(path)
     }
   }
 }

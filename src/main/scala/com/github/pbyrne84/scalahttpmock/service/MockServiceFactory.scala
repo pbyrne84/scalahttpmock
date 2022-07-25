@@ -2,7 +2,11 @@ package com.github.pbyrne84.scalahttpmock.service
 
 import cats.Monad
 import cats.effect.{ExitCode, IO, IOApp}
-import com.github.pbyrne84.scalahttpmock.expectation.{MatchingAttempt, ServiceExpectation}
+import com.github.pbyrne84.scalahttpmock.expectation.{
+  MatchableRequest,
+  MatchingAttempt,
+  ServiceExpectation
+}
 import com.github.pbyrne84.scalahttpmock.service.request.RequestMatching
 import com.github.pbyrne84.scalahttpmock.service.response.ResponseRemapping
 import com.typesafe.scalalogging.LazyLogging
@@ -26,12 +30,13 @@ class MockService private[service] (port: Int) extends IOApp with LazyLogging {
     .of[IO] {
       case request: Request[IO] =>
         val potentialResponse = requestMatching
-          .resolveResponse(request)
+          .resolveResponse(MatchableRequest.fromRequestIO(request))
 
         potentialResponse.maybeResponse
           .map(response => ResponseRemapping.respondSuccessfully(response))
           .getOrElse(
-            ResponseRemapping.respondUnSuccessfully(request, potentialResponse.allAttempts)
+            ResponseRemapping.respondUnSuccessfully(MatchableRequest.fromRequestIO(request),
+                                                    potentialResponse.allAttempts)
           )
 
       case unknown =>

@@ -5,6 +5,7 @@ import com.github.pbyrne84.scalahttpmock.expectation.{
   AllMatchResult,
   EmptyResponse,
   LocationResponse,
+  MatchableRequest,
   MatchedResponse,
   MatchedResponseWithPotentialBody
 }
@@ -12,9 +13,7 @@ import com.github.pbyrne84.scalahttpmock.service.request.UnSuccessfulResponse
 import com.typesafe.scalalogging.StrictLogging
 import fs2.{text, Stream}
 import org.http4s.headers.`Content-Type`
-import org.http4s.{Headers, MediaType, Request, Response, Status}
-
-import scala.collection.immutable.Seq
+import org.http4s.{Headers, MediaType, Response, Status}
 
 object ResponseRemapping extends StrictLogging {
 
@@ -47,7 +46,7 @@ object ResponseRemapping extends StrictLogging {
   }
 
   private[scalahttpmock] def respondUnSuccessfully(
-      request: Request[IO],
+      request: MatchableRequest,
       allAttempts: Seq[AllMatchResult]
   ): IO[Response[IO]] = {
     val unSuccessfulResponse = UnSuccessfulResponse(request, allAttempts)
