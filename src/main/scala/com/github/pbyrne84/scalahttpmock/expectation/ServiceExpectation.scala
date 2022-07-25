@@ -1,7 +1,5 @@
 package com.github.pbyrne84.scalahttpmock.expectation
-import com.github.pbyrne84.scalahttpmock.expectation.matcher.{HeaderMatcher, _}
-
-import scala.collection.immutable.Seq
+import com.github.pbyrne84.scalahttpmock.expectation.matcher._
 
 case class ServiceExpectation(
     headerMatchers: Seq[HeaderMatcher] = Vector(),
@@ -53,8 +51,10 @@ case class ServiceExpectation(
     """.stripMargin.trim
 
   def contentMatcher: ContentMatcher = httpMethodMatcher match {
-    case hasContent: HasContent => hasContent.content
-    case _ => AnyContentMatcher
+    case hasContent: HasContentHttpMethodMatcher =>
+      hasContent.content
+    case _ =>
+      AnyContentMatcher
   }
 
   def addHeader(headerMatcher: HeaderMatcher): ServiceExpectation = copy(

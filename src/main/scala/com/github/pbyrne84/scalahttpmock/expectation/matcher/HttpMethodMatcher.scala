@@ -31,7 +31,7 @@ sealed trait HttpMethodMatcher extends HasMaxScore with PrettyText {
 
 }
 
-sealed trait HasContent {
+sealed trait HasContentHttpMethodMatcher extends HttpMethodMatcher {
   val content: ContentMatcher
 }
 
@@ -54,24 +54,21 @@ case object DeleteMatcher extends HttpMethodMatcher {
 }
 
 case class PostMatcher(content: ContentMatcher = AnyContentMatcher)
-    extends HttpMethodMatcher
-    with HasContent {
+    extends HasContentHttpMethodMatcher {
   override val maybeMethod = Some(POST)
   override val prettyText: String = "Post"
   override val bodyPrettyText: String = content.prettyText
 }
 
 case class PutMatcher(content: ContentMatcher = AnyContentMatcher)
-    extends HttpMethodMatcher
-    with HasContent {
+    extends HasContentHttpMethodMatcher {
   override val maybeMethod: Option[Method] = Some(PUT)
   override val prettyText: String = "Put"
   override val bodyPrettyText: String = content.prettyText
 }
 
 case class PatchMatcher(content: ContentMatcher = AnyContentMatcher)
-    extends HttpMethodMatcher
-    with HasContent {
+    extends HasContentHttpMethodMatcher {
   override val maybeMethod: Option[Method] = Some(PATCH)
   override val prettyText: String = "Patch"
   override val bodyPrettyText: String = content.prettyText

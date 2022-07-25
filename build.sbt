@@ -19,8 +19,8 @@ libraryDependencies ++= Seq(
   // Optional for string interpolation to JSON model
   "io.circe" %% "circe-literal" % circeVersion,
   "io.circe" %% "circe-parser" % circeVersion,
-  //  "org.eclipse.jetty" % "jetty-server" % "11.0.11",
-  //  "org.eclipse.jetty" % "jetty-webapp" % "11.0.11",
+  "org.eclipse.jetty" % "jetty-server" % "11.0.11",
+  "org.eclipse.jetty" % "jetty-webapp" % "11.0.11",
   "com.softwaremill.sttp" %% "core" % "1.6.0" % Test,
 )
 
