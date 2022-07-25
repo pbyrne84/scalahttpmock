@@ -1,16 +1,20 @@
 package com.github.pbyrne84.scalahttpmock.service.request
 import com.github.pbyrne84.scalahttpmock.BaseSpec
+import com.github.pbyrne84.scalahttpmock.expectation.Method.GET
 import com.github.pbyrne84.scalahttpmock.expectation.matcher.HttpMethodMatcher
 import com.github.pbyrne84.scalahttpmock.expectation.{
   JsonResponse,
   MatchingAttempt,
+  Method,
   ServiceExpectation
 }
 import org.scalatest.BeforeAndAfter
 
 class RequestMatchingSpec extends BaseSpec with BeforeAndAfter {
 
-  private val matchingAttempt: MatchingAttempt = mock[MatchingAttempt]
+  import org.mockito.Mockito._
+
+  private val matchingAttempt: MatchingAttempt = mock(classOf[MatchingAttempt])
   private val requestMatching = new RequestMatching(matchingAttempt)
 
   before {
@@ -20,9 +24,11 @@ class RequestMatchingSpec extends BaseSpec with BeforeAndAfter {
   "resolve response" should {
 
     "return empty response with empty matches when no expectations are set up" in {
-      requestMatching.resolveResponse(createRequest) shouldBe PotentialResponse(None,
-                                                                                Vector(),
-                                                                                Vector())
+      requestMatching.resolveResponse(createRequest) shouldBe PotentialResponse(
+        None,
+        Vector(),
+        Vector()
+      )
     }
 
     "not match when there is a single expectation that does not have a score that equals to a match" in {
@@ -32,9 +38,8 @@ class RequestMatchingSpec extends BaseSpec with BeforeAndAfter {
       val request = createRequest
       val unsuccessfulMatchResult = createAnyAllMatchResult
 
-      (matchingAttempt.tryMatching _)
-        .expects(expectation, request)
-        .returning(unsuccessfulMatchResult)
+      when(matchingAttempt.tryMatching(expectation, request))
+        .thenReturn(unsuccessfulMatchResult)
 
       requestMatching.resolveResponse(request) shouldBe PotentialResponse(
         None,
@@ -53,13 +58,11 @@ class RequestMatchingSpec extends BaseSpec with BeforeAndAfter {
       val unsuccessfulMatchResult = createAnyAllMatchResult
       val successfulMatchResult = createSuccessfulMatchResult(10)
 
-      (matchingAttempt.tryMatching _)
-        .expects(nonMatchingExpectation, request)
-        .returning(unsuccessfulMatchResult)
+      when(matchingAttempt.tryMatching(nonMatchingExpectation, request))
+        .thenReturn(unsuccessfulMatchResult)
 
-      (matchingAttempt.tryMatching _)
-        .expects(matchingExpectation, request)
-        .returning(successfulMatchResult)
+      when(matchingAttempt.tryMatching(matchingExpectation, request))
+        .thenReturn(successfulMatchResult)
 
       requestMatching.resolveResponse(request) shouldBe PotentialResponse(
         Some(matchingExpectation.response),
@@ -90,17 +93,14 @@ class RequestMatchingSpec extends BaseSpec with BeforeAndAfter {
       val successfulMatchResultWithLowerScore = createSuccessfulMatchResult(10)
       val successfulMatchResultWithHigherScore = createSuccessfulMatchResult(20)
 
-      (matchingAttempt.tryMatching _)
-        .expects(nonMatchingExpectation, request)
-        .returning(unsuccessfulMatchResult)
+      when(matchingAttempt.tryMatching(nonMatchingExpectation, request))
+        .thenReturn(unsuccessfulMatchResult)
 
-      (matchingAttempt.tryMatching _)
-        .expects(matchingExpectation1, request)
-        .returning(successfulMatchResultWithLowerScore)
+      when(matchingAttempt.tryMatching(matchingExpectation1, request))
+        .thenReturn(successfulMatchResultWithLowerScore)
 
-      (matchingAttempt.tryMatching _)
-        .expects(matchingExpectation2, request)
-        .returning(successfulMatchResultWithHigherScore)
+      when(matchingAttempt.tryMatching(matchingExpectation2, request))
+        .thenReturn(successfulMatchResultWithHigherScore)
 
       requestMatching.resolveResponse(request) shouldBe PotentialResponse(
         maybeResponse = Some(matchingExpectation2.response),
@@ -127,13 +127,11 @@ class RequestMatchingSpec extends BaseSpec with BeforeAndAfter {
 
       val verifyExpectation = ServiceExpectation(httpMethodMatcher = HttpMethodMatcher.postMatcher)
 
-      (matchingAttempt.tryMatching _)
-        .expects(verifyExpectation, request1)
-        .returning(createAnyAllMatchResult)
+      when(matchingAttempt.tryMatching(verifyExpectation, request1))
+        .thenReturn(createAnyAllMatchResult)
 
-      (matchingAttempt.tryMatching _)
-        .expects(verifyExpectation, request2)
-        .returning(createAnyAllMatchResult)
+      when(matchingAttempt.tryMatching(verifyExpectation, request2))
+        .thenReturn(createAnyAllMatchResult)
 
       a[VerificationFailure] should be thrownBy requestMatching.verifyCall(
         verifyExpectation
@@ -143,18 +141,17 @@ class RequestMatchingSpec extends BaseSpec with BeforeAndAfter {
     "not raise an error when there are calls and one matches" in {
       val request1 = createRequest
       requestMatching.resolveResponse(request1)
-      val request2 = createRequest
+
+      val request2 = createRequest.copy(method = Method.POST)
       requestMatching.resolveResponse(request2)
 
       val verifyExpectation = ServiceExpectation(httpMethodMatcher = HttpMethodMatcher.postMatcher)
 
-      (matchingAttempt.tryMatching _)
-        .expects(verifyExpectation, request1)
-        .returning(createAnyAllMatchResult)
+      when(matchingAttempt.tryMatching(verifyExpectation, request1))
+        .thenReturn(createAnyAllMatchResult)
 
-      (matchingAttempt.tryMatching _)
-        .expects(verifyExpectation, request2)
-        .returning(createSuccessfulMatchResult(10))
+      when(matchingAttempt.tryMatching(verifyExpectation, request2))
+        .thenReturn(createSuccessfulMatchResult(10))
 
       requestMatching.verifyCall(verifyExpectation)
     }
@@ -162,18 +159,17 @@ class RequestMatchingSpec extends BaseSpec with BeforeAndAfter {
     "error when there are calls and one matches but it is supposed to match twice" in {
       val request1 = createRequest
       requestMatching.resolveResponse(request1)
-      val request2 = createRequest
+
+      val request2 = createRequest.copy(method = Method.POST)
       requestMatching.resolveResponse(request2)
 
       val verifyExpectation = ServiceExpectation(httpMethodMatcher = HttpMethodMatcher.postMatcher)
 
-      (matchingAttempt.tryMatching _)
-        .expects(verifyExpectation, request1)
-        .returning(createAnyAllMatchResult)
+      when(matchingAttempt.tryMatching(verifyExpectation, request1))
+        .thenReturn(createAnyAllMatchResult)
 
-      (matchingAttempt.tryMatching _)
-        .expects(verifyExpectation, request2)
-        .returning(createSuccessfulMatchResult(10))
+      when(matchingAttempt.tryMatching(verifyExpectation, request2))
+        .thenReturn(createSuccessfulMatchResult(10))
 
       a[VerificationFailure] should be thrownBy requestMatching.verifyCall(verifyExpectation, 2)
     }
@@ -181,20 +177,18 @@ class RequestMatchingSpec extends BaseSpec with BeforeAndAfter {
     "not error when the expectation does actually match 2 requests" in {
       val request1 = createRequest
       requestMatching.resolveResponse(request1)
-      val request2 = createRequest
+
+      val request2 = createRequest.copy(method = Method.POST)
       requestMatching.resolveResponse(request2)
       requestMatching.resolveResponse(request2)
 
       val verifyExpectation = ServiceExpectation(httpMethodMatcher = HttpMethodMatcher.postMatcher)
 
-      (matchingAttempt.tryMatching _)
-        .expects(verifyExpectation, request1)
-        .returning(createAnyAllMatchResult)
+      when(matchingAttempt.tryMatching(verifyExpectation, request1))
+        .thenReturn(createAnyAllMatchResult)
 
-      (matchingAttempt.tryMatching _)
-        .expects(verifyExpectation, request2)
-        .returning(createSuccessfulMatchResult(10))
-        .twice()
+      when(matchingAttempt.tryMatching(verifyExpectation, request2))
+        .thenReturn(createSuccessfulMatchResult(10))
 
       requestMatching.verifyCall(verifyExpectation, 2)
     }

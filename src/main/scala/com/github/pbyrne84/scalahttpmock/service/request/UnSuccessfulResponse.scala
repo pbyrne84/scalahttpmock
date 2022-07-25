@@ -1,19 +1,17 @@
 package com.github.pbyrne84.scalahttpmock.service.request
 
-import cats.effect.IO
 import com.github.pbyrne84.scalahttpmock.expectation.{
   AllMatchResult,
   Indentation,
+  MatchableRequest,
   RequestPrettification
 }
 import io.circe.generic.semiauto.deriveEncoder
 import io.circe.{Encoder, Json}
-import org.http4s.Request
 
-import scala.collection.immutable.Seq
-
-case class UnSuccessfulResponse(request: Request[IO], allAttempts: Seq[AllMatchResult])
+case class UnSuccessfulResponse(request: MatchableRequest, allAttempts: Seq[AllMatchResult])
     extends Indentation {
+
   import RequestPrettification._
 
   private implicit val testResponseEncoder: Encoder[InvalidMatchResponse] =

@@ -1,13 +1,9 @@
 package com.github.pbyrne84.scalahttpmock.expectation
 
-import cats.effect.IO
-import org.http4s
-import org.http4s.{Headers, Request}
-
 object RequestPrettification {
   private val prettification = new RequestPrettification
 
-  implicit class RequestPrettify(request: Request[IO]) {
+  implicit class RequestPrettify(request: MatchableRequest) {
 
     def prettyFormat: String = prettification.prettify(request)
   }
@@ -16,15 +12,16 @@ object RequestPrettification {
 class RequestPrettification extends Indentation {
   private val multiEntryFormat = """("%s", "%s")"""
 
-  def prettify(request: Request[IO]): String =
+  def prettify(request: MatchableRequest): String =
     s"""
-     |Request[method="${request.method}", path="${request.pathInfo}"](
-     |  Uri     : "${request.uri}",
-     |  Params  : ${indentNewLines(14, formatParams(request.multiParams))},
-     |  Headers : ${indentNewLines(14, formatHeaders(request.headers))},
-     |  Body    : ${getBody(request).getOrElse("None")}
-     |)
-     |""".stripMargin.trim
+       |Request[method="${request.method}", path="${request.uriPath}"](
+       |  Uri            : "${request.uri}",
+       |  PathWithParams : "${request.asPathWithParams}",
+       |  Params         : ${indentNewLines(21, formatParams(request.multiParams))},
+       |  Headers        : ${indentNewLines(21, formatHeaders(request.headers))},
+       |  Body           : ${request.maybeContentAsString}
+       |)
+       |""".stripMargin.trim
 
   private def formatParams(multiParams: Map[String, scala.Seq[String]]): String = {
     if (multiParams.isEmpty) {
@@ -43,7 +40,7 @@ class RequestPrettification extends Indentation {
     }
   }
 
-  private def formatHeaders(headers: Headers): String = {
+  private def formatHeaders(headers: List[Header]): String = {
     if (headers.isEmpty) {
       "[]"
     } else {
@@ -59,11 +56,4 @@ class RequestPrettification extends Indentation {
     }
   }
 
-  private def getBody[F](request: Request[IO]): Option[String] = {
-    if (request.body == http4s.EmptyBody) {
-      None
-    } else {
-      Some(request.as[String].unsafeRunSync)
-    }
-  }
 }

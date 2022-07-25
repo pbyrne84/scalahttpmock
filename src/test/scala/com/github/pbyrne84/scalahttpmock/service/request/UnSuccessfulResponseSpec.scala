@@ -2,8 +2,6 @@ package com.github.pbyrne84.scalahttpmock.service.request
 
 import com.github.pbyrne84.scalahttpmock.BaseSpec
 
-import scala.collection.immutable.Seq
-
 class UnSuccessfulResponseSpec extends BaseSpec {
   "prettyText" should {
 
@@ -12,14 +10,15 @@ class UnSuccessfulResponseSpec extends BaseSpec {
 
       actual shouldBe
         """
-        |The Request was not matched :-
-        |  Request[method="GET", path="/"](
-        |    Uri     : "/",
-        |    Params  : [],
-        |    Headers : [],
-        |    Body    : None
-        |  )
-        |  There was 0 expectations :-
+          |The Request was not matched :-
+          |  Request[method="GET", path="/"](
+          |    Uri            : "/",
+          |    PathWithParams : "/",
+          |    Params         : [],
+          |    Headers        : [],
+          |    Body           : None
+          |  )
+          |  There was 0 expectations :-
       """.stripMargin.trim
     }
 
@@ -29,22 +28,23 @@ class UnSuccessfulResponseSpec extends BaseSpec {
 
       actual shouldBe
         """
-        |The Request was not matched :-
-        |  Request[method="GET", path="/"](
-        |    Uri     : "/",
-        |    Params  : [],
-        |    Headers : [],
-        |    Body    : None
-        |  )
-        |  There was 1 expectations :-
-        |    [INVALID] SCORE:0.0/0.0 failed {METHOD Any, URI Any, CONTENT Any}
-        |      Method  - Non matching : Any
-        |      Headers - Matching     : None
-        |      Headers - Non matching : None
-        |      Uri     - Non matching : Any
-        |      Params  - Matching     : None
-        |      Params  - Non matching : None
-        |      Content - Non matching : Any
+          |The Request was not matched :-
+          |  Request[method="GET", path="/"](
+          |    Uri            : "/",
+          |    PathWithParams : "/",
+          |    Params         : [],
+          |    Headers        : [],
+          |    Body           : None
+          |  )
+          |  There was 1 expectations :-
+          |    [INVALID] SCORE:0.0/0.0 failed {METHOD Any, URI Any, CONTENT Any}
+          |      Method  - Non matching : Any
+          |      Headers - Matching     : None
+          |      Headers - Non matching : None
+          |      Uri     - Non matching : Any
+          |      Params  - Matching     : None
+          |      Params  - Non matching : None
+          |      Content - Non matching : Any
       """.stripMargin.trim
     }
 
@@ -56,10 +56,11 @@ class UnSuccessfulResponseSpec extends BaseSpec {
         """
           |The Request was not matched :-
           |  Request[method="GET", path="/"](
-          |    Uri     : "/",
-          |    Params  : [],
-          |    Headers : [],
-          |    Body    : None
+          |    Uri            : "/",
+          |    PathWithParams : "/",
+          |    Params         : [],
+          |    Headers        : [],
+          |    Body           : None
           |  )
           |  There was 2 expectations :-
           |    [INVALID] SCORE:10.0/8.0 failed {METHOD Any, URI Any, CONTENT Any}

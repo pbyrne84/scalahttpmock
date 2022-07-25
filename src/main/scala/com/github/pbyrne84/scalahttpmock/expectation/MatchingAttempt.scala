@@ -1,15 +1,91 @@
 package com.github.pbyrne84.scalahttpmock.expectation
 
-import cats.effect.IO
 import com.github.pbyrne84.scalahttpmock.expectation.matcher._
-import org.http4s.util.CaseInsensitiveString
-import org.http4s.{Header, Request}
+import org.eclipse.jetty.server.{Request => JettyRequest}
 
-import scala.collection.immutable.Seq
+import java.util.stream.Collectors
+import scala.jdk.CollectionConverters.{EnumerationHasAsScala, MapHasAsScala}
+
+object Method {
+  private val options: Map[String, Method] = List(POST, GET, PUT, DELETE, PATCH).map { value =>
+    value.text -> value
+  }.toMap
+  def fromString(text: String): Option[Method] = {
+    options.get(text.toUpperCase)
+  }
+
+  case object POST extends Method("POST")
+
+  case object GET extends Method("GET")
+
+  case object PUT extends Method("PUT")
+
+  case object DELETE extends Method("DELETE")
+
+  case object PATCH extends Method("PATCH")
+
+}
+
+sealed abstract class Method(val text: String)
+
+case class CaseInsensitiveString(value: String) {
+
+  def ==(other: CaseInsensitiveString): Boolean = {
+    value.equalsIgnoreCase(other.value)
+  }
+
+}
+
+case class MatchableRequest(uriPath: String,
+                            asPathWithParams: String,
+                            headers: List[Header],
+                            method: Method,
+                            multiParams: Map[String, Seq[String]],
+                            maybeContentAsString: Option[String],
+                            uri: String)
+
+object MatchableRequest {
+
+  def fromHttpServletRequest(request: JettyRequest): MatchableRequest = {
+    val headers: List[Header] = request.getHeaderNames.asScala.toList.flatMap { headerName =>
+      val headersValues = request.getHeaders(headerName).asScala.toList
+
+      headersValues.map { headerValue =>
+        Header(CaseInsensitiveString(headerName), headerValue)
+      }
+    }
+
+    val method = Method
+      .fromString(request.getMethod)
+      .getOrElse(throw new RuntimeException(s"${request.getMethod} method cannot be mapped"))
+
+    val multiParams = request.getParameterMap.asScala.map {
+      case (name, values) => name -> values.toList
+    }.toMap
+
+    val maybeContentAsString = if (request.getContentLength > 0) {
+      Some(request.getReader.lines.collect(Collectors.joining(System.lineSeparator)))
+    } else {
+      None
+    }
+
+    val uri = request.getHttpURI.toString
+
+    MatchableRequest(
+      uriPath = request.getPathInfo,
+      asPathWithParams = request.asPathWithParams,
+      headers = headers,
+      method = method,
+      multiParams = multiParams,
+      maybeContentAsString = maybeContentAsString,
+      uri = uri
+    )
+  }
+}
 
 class MatchingAttempt {
 
-  def tryMatching(expectation: ServiceExpectation, request: Request[IO]): AllMatchResult = {
+  def tryMatching(expectation: ServiceExpectation, request: MatchableRequest): AllMatchResult = {
     val headerMatches = tryMatchingHeaders(expectation, request)
     val urlMatch = tryMatchingUrl(expectation, request)
     val methodMatch = tryMatchingHttpMethod(expectation, request)
@@ -20,13 +96,13 @@ class MatchingAttempt {
   }
 
   private def tryMatchingHeaders(expectation: ServiceExpectation,
-                                 request: Request[IO]): Seq[HeaderMatchResult] = {
+                                 request: MatchableRequest): Seq[HeaderMatchResult] = {
     expectation.headerMatchers.map { headerMatcher =>
       val default = MatchingScore(0, headerMatcher.maxScore)
       val maybeMatchingScore: MatchingScore = headerMatcher match {
         case headerEquals: HeaderEquals =>
           scoreFromMany(
-            request.headers.toList,
+            request.headers,
             (header: Header) =>
               header.name == CaseInsensitiveString(headerEquals.name) && header.value == headerEquals.value,
             default
@@ -34,7 +110,7 @@ class MatchingAttempt {
 
         case headerMatches: HeaderMatches =>
           scoreFromMany(
-            request.headers.toList,
+            request.headers,
             (header: Header) =>
               header.name == CaseInsensitiveString(headerMatches.name) && headerMatches.valueRegex
                 .findFirstIn(header.value)
@@ -58,23 +134,23 @@ class MatchingAttempt {
   }
 
   private def tryMatchingUrl(expectation: ServiceExpectation,
-                             request: Request[IO]): UriMatchResult = {
+                             request: MatchableRequest): UriMatchResult = {
 
     val matchingScore: MatchingScore = expectation.uriMatcher match {
       case AnyUriMatcher => MatchingScore.success(AnyUriMatcher.maxScore)
 
-      case pathEquals: PathEquals if pathEquals.path == request.uri.path =>
+      case pathEquals: PathEquals if pathEquals.path == request.uriPath =>
         MatchingScore.success(pathEquals.maxScore)
 
       case pathMatches: PathMatches
-          if pathMatches.pathRegex.findFirstIn(request.uri.path).isDefined =>
+          if pathMatches.pathRegex.findFirstIn(request.uriPath).isDefined =>
         MatchingScore.success(pathMatches.maxScore)
 
-      case uriEquals: UriEquals if uriEquals.uri == request.uri.asPathWithParams =>
+      case uriEquals: UriEquals if uriEquals.uri == request.asPathWithParams =>
         MatchingScore.success(uriEquals.maxScore)
 
       case uriMatches: UriMatches
-          if uriMatches.uriRegex.findFirstIn(request.uri.asPathWithParams).isDefined =>
+          if uriMatches.uriRegex.findFirstIn(request.asPathWithParams).isDefined =>
         MatchingScore.success(uriMatches.maxScore)
 
       case _ => MatchingScore(0, 1)
@@ -85,7 +161,7 @@ class MatchingAttempt {
   }
 
   private def tryMatchingHttpMethod(expectation: ServiceExpectation,
-                                    request: Request[IO]): HttpMethodMatchResult = {
+                                    request: MatchableRequest): HttpMethodMatchResult = {
     val matchingScore = expectation.httpMethodMatcher match {
       case AnyHttpMethodMatcher =>
         MatchingScore(AnyHttpMethodMatcher.maxScore, AnyHttpMethodMatcher.maxScore)
@@ -102,7 +178,7 @@ class MatchingAttempt {
   }
 
   private def tryMatchingParams(expectation: ServiceExpectation,
-                                request: Request[IO]): Seq[ParamMatchResult] = {
+                                request: MatchableRequest): Seq[ParamMatchResult] = {
 
     def matchSingleParam(paramMatcher: ParamMatcher) = {
       val params = request.multiParams.map(
@@ -140,10 +216,10 @@ class MatchingAttempt {
   }
 
   private def tryMatchingContent(expectation: ServiceExpectation,
-                                 request: Request[IO]): ContentMatchResult = {
+                                 request: MatchableRequest): ContentMatchResult = {
 
     val contentMatcher = expectation.contentMatcher
-    val contentAsString = request.as[String].unsafeRunSync
+    val contentAsString = request.maybeContentAsString.getOrElse("")
 
     val success: MatchingScore = contentMatcher match {
       case AnyContentMatcher => MatchingScore.success(AnyContentMatcher.maxScore)
