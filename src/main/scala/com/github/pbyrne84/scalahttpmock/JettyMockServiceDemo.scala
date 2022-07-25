@@ -8,12 +8,14 @@ import com.github.pbyrne84.scalahttpmock.expectation.{
 }
 import com.github.pbyrne84.scalahttpmock.service.JettyMockService
 
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration.Duration
+
 object JettyMockServiceDemo {
 
   def main(args: Array[String]): Unit = {
-    val jettyMockService: JettyMockService = JettyMockService.create(8080)
+    val jettyMockService: JettyMockService[Future] = JettyMockService.createFutureVersion(8080)
 
-    println("banana " + jettyMockService.server.getThreadPool.getThreads)
     val response: JsonResponse = JsonResponse(404, Some("{}"), List.empty)
     jettyMockService
       .addExpectation(
@@ -24,7 +26,7 @@ object JettyMockServiceDemo {
           .withResponse(LocationResponse(301, "https://www.google.com"))
       )
 
-    jettyMockService.server.setStopAtShutdown(true)
+    jettyMockService.shutDown()
   }
 
 }

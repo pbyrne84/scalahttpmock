@@ -1,7 +1,6 @@
 package com.github.pbyrne84.scalahttpmock.expectation
 import com.github.pbyrne84.scalahttpmock.BaseSpec
 import com.github.pbyrne84.scalahttpmock.expectation.matcher._
-import org.http4s.{Header, Headers, Method}
 import org.scalatest.OptionValues
 import org.scalatest.prop.TableDrivenPropertyChecks
 
@@ -24,7 +23,7 @@ class MatchingAttemptSpec extends BaseSpec with TableDrivenPropertyChecks with O
           matchingAttempt
             .tryMatching(
               ServiceExpectation(uriMatcher = pathEquals),
-              createRequest.withUri("http://www.x.com/xxxx/yyyy?x=1&y=2".asUri).asMatchable
+              createRequest.withUri("http://www.x.com/xxxx/yyyy?x=1&y=2")
             )
             .uriMatchResult shouldBe UriMatchResult(uriMatcher = pathEquals,
                                                     matchingScore = matches)
@@ -45,7 +44,7 @@ class MatchingAttemptSpec extends BaseSpec with TableDrivenPropertyChecks with O
           matchingAttempt
             .tryMatching(
               expectation,
-              createRequest.withUri("http://www.x.com/xxxx/yyyy?x=1&y=2".asUri).asMatchable
+              createRequest.withUri("http://www.x.com/xxxx/yyyy?x=1&y=2")
             )
             .uriMatchResult shouldBe UriMatchResult(uriMatcher = pathMatches, matchingScore = score)
       }
@@ -58,7 +57,7 @@ class MatchingAttemptSpec extends BaseSpec with TableDrivenPropertyChecks with O
       matchingAttempt
         .tryMatching(
           expectation,
-          createRequest.withUri("http://www.x.com/xxxx/yyyy".asUri).asMatchable
+          createRequest.withUri("http://www.x.com/xxxx/yyyy")
         )
         .uriMatchResult shouldBe UriMatchResult(uriMatcher = uriEquals,
                                                 matchingScore =
@@ -80,7 +79,7 @@ class MatchingAttemptSpec extends BaseSpec with TableDrivenPropertyChecks with O
         matchingAttempt
           .tryMatching(
             expectation,
-            createRequest.withUri("http://www.x.com/xxxx/yyyy?x=1&y=2".asUri).asMatchable
+            createRequest.withUri("http://www.x.com/xxxx/yyyy?x=1&y=2")
           )
           .uriMatchResult shouldBe UriMatchResult(uriMatcher = uriEquals, matchingScore = matches)
       }
@@ -100,7 +99,7 @@ class MatchingAttemptSpec extends BaseSpec with TableDrivenPropertyChecks with O
         matchingAttempt
           .tryMatching(
             expectation,
-            createRequest.withUri("http://www.x.com/xxxx/yyyy?x=1&y=2".asUri).asMatchable
+            createRequest.withUri("http://www.x.com/xxxx/yyyy?x=1&y=2")
           )
           .uriMatchResult shouldBe UriMatchResult(uriMatcher = uriMatches, matchingScore = matches)
       }
@@ -132,7 +131,7 @@ class MatchingAttemptSpec extends BaseSpec with TableDrivenPropertyChecks with O
       matchingAttempt
         .tryMatching(
           expectation,
-          createRequest.withUri("http://www.x.com/xxxx/yyyy?a=t&x=1&y=2&z=abc".asUri).asMatchable
+          createRequest.withUri("http://www.x.com/xxxx/yyyy?a=t&x=1&y=2&z=abc")
         )
         .paramMatchResults shouldBe paramMatches
     }
@@ -161,7 +160,7 @@ class MatchingAttemptSpec extends BaseSpec with TableDrivenPropertyChecks with O
       matchingAttempt
         .tryMatching(
           expectation,
-          createRequest.withUri("http://www.x.com/xxxx/yyyy?a=t&x=1&y=2&z=abcc".asUri).asMatchable
+          createRequest.withUri("http://www.x.com/xxxx/yyyy?a=t&x=1&y=2&z=abcc")
         )
         .paramMatchResults shouldBe paramMatches
     }
@@ -182,9 +181,8 @@ class MatchingAttemptSpec extends BaseSpec with TableDrivenPropertyChecks with O
 
       forAll(verbs) { verb =>
         val request = createRequest
-          .withUri("http://www.x.com/xxxx/yyyy".asUri)
+          .withUri("http://www.x.com/xxxx/yyyy")
           .withMethod(verb)
-          .asMatchable
 
         matchingAttempt
           .tryMatching(expectation, request)
@@ -206,9 +204,8 @@ class MatchingAttemptSpec extends BaseSpec with TableDrivenPropertyChecks with O
         val expectation = ServiceExpectation(httpMethodMatcher = httpMethodMatcher)
 
         val request = createRequest
-          .withUri("http://www.x.com/xxxx/yyyy".asUri)
+          .withUri("http://www.x.com/xxxx/yyyy")
           .withMethod(verb)
-          .asMatchable
 
         matchingAttempt
           .tryMatching(expectation, request)
@@ -232,9 +229,8 @@ class MatchingAttemptSpec extends BaseSpec with TableDrivenPropertyChecks with O
           ServiceExpectation(httpMethodMatcher = httpMethodMatcher)
 
         val request = createRequest
-          .withUri("http://www.x.com/xxxx/yyyy".asUri)
+          .withUri("http://www.x.com/xxxx/yyyy")
           .withMethod(allVerbs.find(_ != verb).value)
-          .asMatchable
 
         matchingAttempt
           .tryMatching(expectation, request)
@@ -260,11 +256,9 @@ class MatchingAttemptSpec extends BaseSpec with TableDrivenPropertyChecks with O
           ServiceExpectation(httpMethodMatcher = postWithContent)
 
         val request = createRequest
-          .withUri("http://www.x.com/xxxx/yyyy".asUri)
+          .withUri("http://www.x.com/xxxx/yyyy")
           .withMethod(Method.POST)
           .withBody(content)
-          .unsafeRunSync()
-          .asMatchable
 
         matchingAttempt
           .tryMatching(expectation, request)
@@ -292,11 +286,9 @@ class MatchingAttemptSpec extends BaseSpec with TableDrivenPropertyChecks with O
             ServiceExpectation(httpMethodMatcher = postWithContent)
 
           val request = createRequest
-            .withUri("http://www.x.com/xxxx/yyyy".asUri)
+            .withUri("http://www.x.com/xxxx/yyyy")
             .withMethod(Method.POST)
             .withBody(content)
-            .unsafeRunSync()
-            .asMatchable
 
           matchingAttempt
             .tryMatching(expectation, request)
@@ -331,11 +323,9 @@ class MatchingAttemptSpec extends BaseSpec with TableDrivenPropertyChecks with O
             ServiceExpectation(httpMethodMatcher = postWithContent)
 
           val request = createRequest
-            .withUri("http://www.x.com/xxxx/yyyy".asUri)
+            .withUri("http://www.x.com/xxxx/yyyy")
             .withMethod(Method.POST)
             .withBody(jsonContent)
-            .unsafeRunSync()
-            .asMatchable
 
           matchingAttempt
             .tryMatching(expectation, request)
@@ -354,11 +344,9 @@ class MatchingAttemptSpec extends BaseSpec with TableDrivenPropertyChecks with O
         ServiceExpectation(httpMethodMatcher = postWithContent)
 
       val request = createRequest
-        .withUri("http://www.x.com/xxxx/yyyy".asUri)
+        .withUri("http://www.x.com/xxxx/yyyy")
         .withMethod(Method.POST)
         .withBody("{:{")
-        .unsafeRunSync()
-        .asMatchable
 
       matchingAttempt
         .tryMatching(expectation, request)
@@ -377,11 +365,9 @@ class MatchingAttemptSpec extends BaseSpec with TableDrivenPropertyChecks with O
         ServiceExpectation(httpMethodMatcher = postWithContent)
 
       val request = createRequest
-        .withUri("http://www.x.com/xxxx/yyyy".asUri)
+        .withUri("http://www.x.com/xxxx/yyyy")
         .withMethod(Method.POST)
         .withBody("{:{")
-        .unsafeRunSync()
-        .asMatchable
 
       matchingAttempt
         .tryMatching(expectation, request)
@@ -400,11 +386,9 @@ class MatchingAttemptSpec extends BaseSpec with TableDrivenPropertyChecks with O
         ServiceExpectation(httpMethodMatcher = postWithContent)
 
       val request = createRequest
-        .withUri("http://www.x.com/xxxx/yyyy".asUri)
+        .withUri("http://www.x.com/xxxx/yyyy")
         .withMethod(Method.POST)
         .withBody("{}")
-        .unsafeRunSync()
-        .asMatchable
 
       matchingAttempt
         .tryMatching(expectation, request)
@@ -417,17 +401,16 @@ class MatchingAttemptSpec extends BaseSpec with TableDrivenPropertyChecks with O
   }
 
   "header matcher is case insensitive on name and" should {
-    val headers = Headers(
+    val headers =
       List(
         Header("X", "1"),
         Header("y", "2"),
         Header("a", "y"),
         Header("z", "zoo")
       )
-    )
 
     val requestWithHeaders =
-      createRequest.withHeaders(headers).asMatchable
+      createRequest.withHeaders(headers)
 
     "not care about order and allow a combination of matching and equality" in {
       val headerEqualsMatchers = Vector(

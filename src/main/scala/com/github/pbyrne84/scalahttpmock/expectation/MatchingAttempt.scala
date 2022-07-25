@@ -1,18 +1,44 @@
 package com.github.pbyrne84.scalahttpmock.expectation
 
-import cats.effect.IO
 import com.github.pbyrne84.scalahttpmock.expectation.matcher._
 import org.eclipse.jetty.server.{Request => JettyRequest}
-import org.http4s
-import org.http4s.util.CaseInsensitiveString
-import org.http4s.{Header, Method, Request}
 
 import java.util.stream.Collectors
 import scala.jdk.CollectionConverters.{EnumerationHasAsScala, MapHasAsScala}
 
+object Method {
+  private val options: Map[String, Method] = List(POST, GET, PUT, DELETE, PATCH).map { value =>
+    value.text -> value
+  }.toMap
+  def fromString(text: String): Option[Method] = {
+    options.get(text.toUpperCase)
+  }
+
+  case object POST extends Method("POST")
+
+  case object GET extends Method("GET")
+
+  case object PUT extends Method("PUT")
+
+  case object DELETE extends Method("DELETE")
+
+  case object PATCH extends Method("PATCH")
+
+}
+
+sealed abstract class Method(val text: String)
+
+case class CaseInsensitiveString(value: String) {
+
+  def ==(other: CaseInsensitiveString): Boolean = {
+    value.equalsIgnoreCase(other.value)
+  }
+
+}
+
 case class MatchableRequest(uriPath: String,
                             asPathWithParams: String,
-                            headersList: List[Header],
+                            headers: List[Header],
                             method: Method,
                             multiParams: Map[String, Seq[String]],
                             maybeContentAsString: Option[String],
@@ -21,11 +47,11 @@ case class MatchableRequest(uriPath: String,
 object MatchableRequest {
 
   def fromHttpServletRequest(request: JettyRequest): MatchableRequest = {
-    val headers: List[Header.Raw] = request.getHeaderNames.asScala.toList.flatMap { headerName =>
+    val headers: List[Header] = request.getHeaderNames.asScala.toList.flatMap { headerName =>
       val headersValues = request.getHeaders(headerName).asScala.toList
 
       headersValues.map { headerValue =>
-        Header.Raw(CaseInsensitiveString(headerName), headerValue)
+        Header(CaseInsensitiveString(headerName), headerValue)
       }
     }
 
@@ -48,29 +74,11 @@ object MatchableRequest {
     MatchableRequest(
       uriPath = request.getPathInfo,
       asPathWithParams = request.asPathWithParams,
-      headersList = headers,
+      headers = headers,
       method = method,
       multiParams = multiParams,
       maybeContentAsString = maybeContentAsString,
       uri = uri
-    )
-  }
-
-  def fromRequestIO(request: Request[IO]): MatchableRequest = {
-    val maybeContentAsString = if (request.body == http4s.EmptyBody) {
-      None
-    } else {
-      Some(request.as[String].unsafeRunSync)
-    }
-
-    MatchableRequest(
-      uriPath = request.uri.path,
-      asPathWithParams = request.uri.asPathWithParams,
-      headersList = request.headers.toList,
-      method = request.method,
-      multiParams = request.multiParams,
-      maybeContentAsString = maybeContentAsString,
-      uri = request.uri.toString,
     )
   }
 }
@@ -94,7 +102,7 @@ class MatchingAttempt {
       val maybeMatchingScore: MatchingScore = headerMatcher match {
         case headerEquals: HeaderEquals =>
           scoreFromMany(
-            request.headersList,
+            request.headers,
             (header: Header) =>
               header.name == CaseInsensitiveString(headerEquals.name) && header.value == headerEquals.value,
             default
@@ -102,7 +110,7 @@ class MatchingAttempt {
 
         case headerMatches: HeaderMatches =>
           scoreFromMany(
-            request.headersList,
+            request.headers,
             (header: Header) =>
               header.name == CaseInsensitiveString(headerMatches.name) && headerMatches.valueRegex
                 .findFirstIn(header.value)

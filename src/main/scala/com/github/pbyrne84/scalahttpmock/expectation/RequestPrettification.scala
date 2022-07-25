@@ -1,7 +1,5 @@
 package com.github.pbyrne84.scalahttpmock.expectation
 
-import org.http4s.Header
-
 object RequestPrettification {
   private val prettification = new RequestPrettification
 
@@ -20,7 +18,7 @@ class RequestPrettification extends Indentation {
        |  Uri            : "${request.uri}",
        |  PathWithParams : "${request.asPathWithParams}",
        |  Params         : ${indentNewLines(21, formatParams(request.multiParams))},
-       |  Headers        : ${indentNewLines(21, formatHeaders(request.headersList))},
+       |  Headers        : ${indentNewLines(21, formatHeaders(request.headers))},
        |  Body           : ${request.maybeContentAsString}
        |)
        |""".stripMargin.trim

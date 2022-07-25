@@ -65,7 +65,7 @@ class RequestMatching(matchingAttempt: MatchingAttempt) {
     serviceRequests += request
 
     val attempts: List[MatchWithResponse] = expectations.toList.map {
-      expectation: ServiceExpectation =>
+      (expectation: ServiceExpectation) =>
         MatchWithResponse(matchingAttempt.tryMatching(expectation, request), expectation.response)
     }
 

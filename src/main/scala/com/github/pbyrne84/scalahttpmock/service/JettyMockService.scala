@@ -13,30 +13,66 @@ import com.github.pbyrne84.scalahttpmock.service.request.{RequestMatching, UnSuc
 import com.typesafe.scalalogging.LazyLogging
 import jakarta.servlet.http.{HttpServletRequest, HttpServletResponse}
 import org.eclipse.jetty.server.{Handler, Server}
-import org.eclipse.jetty.util.thread.QueuedThreadPool
 
 import java.util.EventListener
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.util.Try
 
 object JettyMockService {
-  def create(port: Int): JettyMockService = new JettyMockService(port)
+  import scala.concurrent.ExecutionContext.Implicits.global
+  def createFutureVersion(port: Int): JettyMockService[Future] = {
+    implicit val a = new FutureMockServiceExecutor
+    new JettyMockService(port)
+  }
 }
 
-class JettyMockService private[service] (port: Int) extends LazyLogging {
-  private[this] val requestMatching = new RequestMatching(new MatchingAttempt)
-  val server = new Server(port)
+trait MockServiceExecutor[F[_]] {
 
-  Future {
-    server.getThreadPool.asInstanceOf[QueuedThreadPool].setMaxThreads(100)
+  def run(server: Server): F[Server]
+
+  def shutDown(runningServer: F[Server]): Either[Throwable, Unit]
+}
+
+class FutureMockServiceExecutor(implicit val ec: ExecutionContext)
+    extends MockServiceExecutor[Future] {
+
+  override def run(server: Server): Future[Server] = {
+    Future {
+      server.start()
+      server.join()
+      server
+    }
+  }
+
+  override def shutDown(runningServer: Future[Server]): Either[Throwable, Unit] = {
+    runningServer.foreach { server =>
+      server.setStopAtShutdown(true)
+    }
+
+    Try(Await.result(runningServer, Duration.Inf)).toEither.map(_ => ())
+  }
+}
+
+class JettyMockService[F[_]] private[service] (port: Int)(
+    implicit val ec: ExecutionContext,
+    mockServiceExecutor: MockServiceExecutor[F]
+) extends LazyLogging {
+  private[this] val requestMatching = new RequestMatching(new MatchingAttempt)
+  private val server = new Server(port)
+
+  private var runningServer: F[Server] = _
+
+  def start(): Unit = {
+    val server = new Server(port)
     server.setHandler(mockHandler)
-    server.start()
-    server.join()
+
+    runningServer = mockServiceExecutor.run(server)
   }
 
   def reset(): Unit = requestMatching.reset()
 
-  def addExpectation(expectation: ServiceExpectation): JettyMockService = {
+  def addExpectation(expectation: ServiceExpectation): JettyMockService[F] = {
     requestMatching.addExpectation(expectation)
     this
   }
@@ -44,7 +80,9 @@ class JettyMockService private[service] (port: Int) extends LazyLogging {
   def verifyCall(expectation: ServiceExpectation, expectedTimes: Int = 1): Unit =
     requestMatching.verifyCall(expectation, expectedTimes)
 
-  def shutDown(): Unit = {} //server.shutdownNow()
+  def shutDown(): Unit = {
+    mockServiceExecutor.shutDown(runningServer)
+  }
 
   private lazy val mockHandler = new Handler {
     private var currentServer: Server = _
@@ -86,8 +124,8 @@ class JettyMockService private[service] (port: Int) extends LazyLogging {
             case LocationResponse(statusCode, uri, customHeaders) =>
               response.setStatus(statusCode)
 
-              println(s"Location: ${uri.renderString}")
-              response.setHeader("Location", uri.renderString)
+              println(s"Location: ${uri}")
+              response.setHeader("Location", uri)
 
               customHeaders.foreach { header =>
                 response.setHeader(header.name.value, header.value)
@@ -100,7 +138,7 @@ class JettyMockService private[service] (port: Int) extends LazyLogging {
 
           println(unSuccessfulResponse.prettyFormat)
           logger.warn(unSuccessfulResponse.prettyFormat)
-          response.setStatus(HttpServletResponse.SC_OK)
+          response.setStatus(501)
           out.write(unSuccessfulResponse.asErrorJson.spaces2.getBytes("UTF-8"))
       }
     }
