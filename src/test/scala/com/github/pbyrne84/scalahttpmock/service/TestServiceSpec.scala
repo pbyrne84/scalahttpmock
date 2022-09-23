@@ -7,21 +7,24 @@ import com.github.pbyrne84.scalahttpmock.expectation.matcher.{
   HttpMethodMatcher
 }
 import com.github.pbyrne84.scalahttpmock.expectation.{
+  Header,
   JsonResponse,
   LocationResponse,
   ServiceExpectation
 }
 import com.github.pbyrne84.scalahttpmock.service.request.VerificationFailure
-import com.softwaremill.sttp._
-import org.http4s.Header
-import org.http4s.headers.Location
 import org.scalatest.BeforeAndAfter
+import sttp.client3._
+import sttp.model.StatusCode
 
 class TestServiceSpec extends BaseSpec with BeforeAndAfter {
 
   private val port = 9001
-  private val service = new MockService(port)
-  implicit val backend: SttpBackend[Id, Nothing] = HttpURLConnectionBackend()
+  private val service = JettyMockService.createFutureVersion(port)
+  service.start()
+  implicit val backend: SttpBackend[Identity, Any] = HttpURLConnectionBackend()
+
+  import sttp.client3.quick._
 
   before {
     service.reset()
@@ -39,13 +42,13 @@ class TestServiceSpec extends BaseSpec with BeforeAndAfter {
       )
 
       val uri = uri"http://localhost:$port/test/path"
-      val request = sttp
+      val request = basicRequest
         .get(uri)
         .header("a", "avalue")
 
       val response = request.send()
 
-      response.code shouldBe 501
+      response.code shouldBe StatusCode(501)
     }
 
     "equate all values in get" in {
@@ -61,18 +64,18 @@ class TestServiceSpec extends BaseSpec with BeforeAndAfter {
       )
 
       val uri = uri"$uriText"
-      val request = sttp
+      val request = basicRequest
         .get(uri)
         .header("a", "avalue")
 
       val response = request.send()
 
-      response.code shouldBe 202
+      response.code shouldBe StatusCode(202)
 
       response.headers shouldHaveEntry ("Content-Type", "application/json")
       response.headers shouldHaveEntry customHeader
 
-      response.unsafeBody shouldBe responseJson
+      response.body shouldBe Right(responseJson)
     }
 
     "equate all values in post" in {
@@ -89,19 +92,19 @@ class TestServiceSpec extends BaseSpec with BeforeAndAfter {
       )
 
       val uri = uri"$uriText"
-      val request = sttp
+      val request = basicRequest
         .post(uri)
         .header("a", "avalue")
         .body(payloadJson)
 
       val response = request.send()
 
-      response.code shouldBe 202
+      response.code shouldBe StatusCode(202)
 
       response.headers shouldHaveEntry ("Content-Type", "application/json")
       response.headers shouldHaveEntry customHeader
 
-      response.unsafeBody shouldBe responseJson
+      response.body shouldBe Right(responseJson)
     }
 
     "location header is returned" in {
@@ -116,14 +119,14 @@ class TestServiceSpec extends BaseSpec with BeforeAndAfter {
       val uriText = s"http://localhost:$port/test/path2"
 
       val uri = uri"$uriText"
-      val request = sttp
+      val request = basicRequest
         .followRedirects(false)
         .get(uri)
 
       val response = request.send()
 
-      response.code shouldBe 303
-      response.headers shouldHaveEntry Location(org.http4s.Uri.unsafeFromString(redirect))
+      response.code shouldBe StatusCode(303)
+      response.headers shouldHaveEntry Header.location(redirect)
 
     }
   }
@@ -141,13 +144,13 @@ class TestServiceSpec extends BaseSpec with BeforeAndAfter {
 
     val uri = uri"http://localhost:$port/test/uri"
 
-    val request = sttp
+    val request = basicRequest
       .post(uri)
 
     val response = request.send()
 
-    response.code shouldBe 200
-    response.unsafeBody shouldBe expectedJsonResponse
+    response.code shouldBe StatusCode(200)
+    response.body shouldBe Right(expectedJsonResponse)
   }
 
   "allow multiple params with the same name to be matched" in {
@@ -160,9 +163,9 @@ class TestServiceSpec extends BaseSpec with BeforeAndAfter {
     service.addExpectation(matchUrlExpectation)
     val uri = uri"http://localhost:$port/test/path?a=1&a=2"
 
-    val request = sttp.get(uri)
+    val request = basicRequest.get(uri)
     val response = request.send()
-    response.code shouldBe 200
+    response.code shouldBe StatusCode(200)
   }
 
   "not fail on valid verification" in {
@@ -175,10 +178,10 @@ class TestServiceSpec extends BaseSpec with BeforeAndAfter {
     service.addExpectation(matchUrlExpectation)
     val uri = uri"http://localhost:$port/test/path?a=1&a=2"
 
-    val request = sttp.get(uri)
+    val request = basicRequest.get(uri)
     val response = request.send()
 
-    response.code shouldBe 200
+    response.code shouldBe StatusCode(200)
 
     service.verifyCall(matchUrlExpectation.withUri("/test/path?a=1&a=2".asUriEquals))
   }
@@ -193,10 +196,10 @@ class TestServiceSpec extends BaseSpec with BeforeAndAfter {
     service.addExpectation(matchUrlExpectation)
     val uri = uri"http://localhost:$port/test/path?a=1&a=2"
 
-    val request = sttp.get(uri)
+    val request = basicRequest.get(uri)
     val response = request.send()
 
-    response.code shouldBe 200
+    response.code shouldBe StatusCode(200)
 
     a[VerificationFailure] should be thrownBy service.verifyCall(
       matchUrlExpectation.withUri("/invalid/path?a=1&a=2".asUriEquals)

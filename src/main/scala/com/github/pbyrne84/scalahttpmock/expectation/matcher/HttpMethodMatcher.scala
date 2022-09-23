@@ -1,8 +1,7 @@
 package com.github.pbyrne84.scalahttpmock.expectation.matcher
 
-import com.github.pbyrne84.scalahttpmock.expectation.{HasAnyMatchMaxScore, HasMaxScore}
-import org.http4s.Method
-import org.http4s.Method.{DELETE, GET, PATCH, POST, PUT}
+import com.github.pbyrne84.scalahttpmock.expectation.Method._
+import com.github.pbyrne84.scalahttpmock.expectation.{HasAnyMatchMaxScore, HasMaxScore, Method}
 
 object HttpMethodMatcher {
   val getMatcher: GetMatcher.type = GetMatcher
@@ -18,7 +17,6 @@ object HttpMethodMatcher {
       case PUT => putMatcher
       case PATCH => patchMatcher
       case DELETE => deleteMatcher
-      case _ => throw new UnsupportedOperationException(s"$method is unsupported")
     }
   }
 }

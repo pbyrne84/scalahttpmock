@@ -1,11 +1,23 @@
 package com.github.pbyrne84.scalahttpmock.expectation
 
-import org.http4s.headers._
-import org.http4s.{Header, MediaType, Status, Uri}
-
-import scala.collection.immutable.Seq
-
 class InvalidResponseStatusCodeException(message: String) extends IllegalArgumentException(message)
+
+object Header {
+  def apply(name: String, value: String): Header = {
+    Header(CaseInsensitiveString(name), value)
+  }
+  def location(url: String): Header = Header(CaseInsensitiveString("Location"), url)
+  def contentType(contentType: String): Header =
+    Header(CaseInsensitiveString("Content-Type"), contentType)
+}
+
+case class Header(name: CaseInsensitiveString, value: String)
+
+case class Status(code: Int)
+
+object Status {
+  def fromInt(status: Int): Status = Status(status)
+}
 
 object MatchedResponse {
   //collated from the children of org.http4s.dsl.impl.ResponseGenerator
@@ -23,22 +35,21 @@ object MatchedResponse {
 sealed trait MatchedResponse {
 
   val statusCode: Int
-  val customHeaders: Seq[Header]
+  def customHeaders: Seq[Header]
 
   private[scalahttpmock] val status = Status
     .fromInt(statusCode)
-    .getOrElse(throw new InvalidResponseStatusCodeException(s"Invalid status code $statusCode"))
 
-  val allHeaders: Seq[Header]
+  def allHeaders: Seq[Header]
 }
 
 trait MatchedResponseWithPotentialBody extends MatchedResponse {
-  val contentTypeHeader: `Content-Type`
+  val contentTypeHeader: Header
 
   val maybeBody: Option[String]
 
-  lazy val allHeaders: Seq[Header] =
-    Vector(Header(contentTypeHeader.name.value, contentTypeHeader.value)) ++ customHeaders
+  def allHeaders: Seq[Header] =
+    Vector(Header(contentTypeHeader.name, contentTypeHeader.value)) ++ customHeaders
 
   if (!MatchedResponse.entityResponseCodes.contains(statusCode)) {
     throw new InvalidResponseStatusCodeException(
@@ -49,8 +60,10 @@ trait MatchedResponseWithPotentialBody extends MatchedResponse {
 }
 
 trait JsonContentType { self: MatchedResponseWithPotentialBody =>
-  override val contentTypeHeader: `Content-Type` =
-    `Content-Type`(MediaType.application.json)
+  override val contentTypeHeader: Header = {
+    Header.contentType("application/json")
+  }
+
 }
 
 case class JsonResponse(statusCode: Int,
@@ -62,7 +75,7 @@ case class JsonResponse(statusCode: Int,
 case class EmptyResponse(statusCode: Int, customHeaders: Seq[Header] = Seq())
     extends MatchedResponse {
 
-  override lazy val allHeaders: Seq[Header] = customHeaders
+  override val allHeaders: Seq[Header] = customHeaders
 
   if (!MatchedResponse.emptyResponseCodes.contains(statusCode)) {
     throw new InvalidResponseStatusCodeException(
@@ -73,11 +86,11 @@ case class EmptyResponse(statusCode: Int, customHeaders: Seq[Header] = Seq())
 
 object LocationResponse {
   def apply(statusCode: Int, uri: String, customHeaders: Seq[Header] = Seq()) =
-    new LocationResponse(statusCode, Uri.unsafeFromString(uri), customHeaders)
+    new LocationResponse(statusCode, uri, customHeaders)
 }
 
 case class LocationResponse private[expectation] (statusCode: Int,
-                                                  uri: Uri,
+                                                  uri: String,
                                                   customHeaders: Seq[Header])
     extends MatchedResponse {
   if (!MatchedResponse.locationResponseCodes.contains(statusCode)) {
@@ -86,7 +99,7 @@ case class LocationResponse private[expectation] (statusCode: Int,
     )
   }
 
-  private val locationHeader = Location(uri)
+  private val locationHeader = Header.location(uri)
 
   override val allHeaders: Seq[Header] = locationHeader +: customHeaders
 }

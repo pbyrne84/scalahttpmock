@@ -2,27 +2,8 @@ package com.github.pbyrne84.scalahttpmock.expectation
 
 import com.github.pbyrne84.scalahttpmock.BaseSpec
 import org.eclipse.jetty.server.Request
-import org.http4s.Uri.{Authority, Scheme}
-import org.http4s.{Query, Uri}
 
 class packageSpec extends BaseSpec {
-
-  "UriAs asPathWithParams" should {
-    val authority = Authority(None, port = Some(8080))
-
-    "convert when there are no params" in {
-      Uri(Some(Scheme.http), path = "/", authority = Some(authority)).asPathWithParams shouldBe "/"
-    }
-
-    "convert when there are params" in {
-      Uri(
-        Some(Scheme.http),
-        path = "/",
-        authority = Some(authority),
-        query = Query("a" -> Some("aa"), "a" -> Some("aaa"), "b" -> Some("bb"))
-      ).asPathWithParams shouldBe "/?a=aa&a=aaa&b=bb"
-    }
-  }
 
   "RequestOps asPathWithParams" should {
 
@@ -40,13 +21,16 @@ class packageSpec extends BaseSpec {
 
     def createServletRequest(pathInfo: String, maybeParams: Option[String]): Request = {
       //trying to work out the innards of this is lovely
-      val request = mock[Request]
 
-      (request.getPathInfo _)
-        .expects()
-        .returns(pathInfo)
+      import org.mockito.Mockito._
 
-      (request.getQueryString _).expects().returns(maybeParams.orNull)
+      val request = mock(classOf[Request])
+
+      when(request.getPathInfo)
+        .thenReturn(pathInfo)
+
+      when(request.getQueryString)
+        .thenReturn(maybeParams.orNull)
 
       request
     }

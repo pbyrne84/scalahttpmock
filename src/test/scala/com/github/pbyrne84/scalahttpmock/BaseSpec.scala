@@ -1,26 +1,39 @@
 package com.github.pbyrne84.scalahttpmock
 
-import cats.effect.IO
+import com.github.pbyrne84.scalahttpmock.expectation.Method.GET
 import com.github.pbyrne84.scalahttpmock.expectation.matcher._
 import com.github.pbyrne84.scalahttpmock.expectation.{
   AllMatchResult,
   ContentMatchResult,
+  Header,
   HttpMethodMatchResult,
   MatchableRequest,
   MatchingScore,
+  Method,
   UriMatchResult
 }
-import org.http4s.{Header, Request, Uri}
-import org.scalamock.scalatest.MockFactory
+import com.github.pbyrne84.scalahttpmock.prettifier.CaseClassPrettifier
+import com.github.pbyrne84.scalahttpmock.service.URI
+import org.scalactic.Prettifier
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
+import sttp.model
 
 import scala.language.implicitConversions
 
-class BaseSpec extends AnyWordSpec with Matchers with MockFactory {
+abstract class BaseSpec extends AnyWordSpec with Matchers {
+
+  implicit val prettifier: Prettifier = Prettifier.apply {
+    case a: AnyRef if CaseClassPrettifier.shouldBeUsedInTestMatching(a) =>
+      new CaseClassPrettifier().prettify(a)
+
+    case a: Any =>
+      Prettifier.default(a)
+
+  }
 
   implicit class StringAsMatcher(string: String) {
-    def asUri: Uri = Uri.unsafeFromString(string)
+    def asUri: URI = URI(string)
     def asPathEquals: UriMatcher = PathEquals(string)
     def asPathMatches: UriMatcher = PathMatches(string.r)
     def asUriEquals: UriMatcher = UriEquals(string)
@@ -46,23 +59,16 @@ class BaseSpec extends AnyWordSpec with Matchers with MockFactory {
     def asParamEquals: Seq[ParamEquals] = tuples.map(_.asParamEquals)
   }
 
-  implicit class Tuple2sAsAssertion(tuples: Seq[(String, String)]) {
+  implicit class SttpHeadersAsAssertion(tuples: Seq[model.Header]) {
 
     def shouldHaveEntry(expected: (String, String)): Unit = {
-      tuples.find(_._1 == expected._1) shouldBe Some(expected._1, expected._2)
+      tuples.find(_.name == expected._1) shouldBe Some(model.Header(expected._1, expected._2))
     }
 
     def shouldHaveEntry(expected: Header): Unit = {
       shouldHaveEntry(expected.name.value, expected.value)
     }
-
   }
-
-  implicit class RequestIOOps(http4sRequest: Request[IO]) {
-    val asMatchable: MatchableRequest = MatchableRequest.fromRequestIO(http4sRequest)
-  }
-
-  protected def createRequest: Request[IO] = Request()
 
   protected def createAnyAllMatchResult: AllMatchResult = {
     val httpMethodResult = HttpMethodMatchResult(AnyHttpMethodMatcher, MatchingScore.empty)
@@ -80,5 +86,46 @@ class BaseSpec extends AnyWordSpec with Matchers with MockFactory {
     createAnyAllMatchResult.copy(
       uriMatchResult = UriMatchResult(AnyUriMatcher, MatchingScore(total, possible))
     )
+
+  def createRequest: MatchableRequest = {
+    val uri = URI("/")
+
+    MatchableRequest(uri.path, uri.pathWithParams, List.empty, GET, Map.empty, None, uri.uri)
+  }
+
+  implicit class MatchableRequestOps(matchableRequest: MatchableRequest) {
+    def withUri(uriString: String): MatchableRequest = {
+      val uri = URI(uriString)
+
+      val uriPath = uri.path
+
+      matchableRequest.copy(
+        uriPath = uriPath,
+        uri = uri.uri,
+        asPathWithParams = uri.pathWithParams,
+        multiParams = uri.params
+      )
+
+    }
+
+    def withMethod(method: Method): MatchableRequest = {
+      matchableRequest.copy(method = method)
+    }
+
+    def withBody(body: String): MatchableRequest = {
+      val headers = List(
+        Header("Content-Length", body.length.toString),
+        Header("Content-Type", "text/plain; charset=UTF-8")
+      )
+      matchableRequest.copy(
+        maybeContentAsString = Some(body),
+        headers = headers
+      )
+    }
+
+    def withHeaders(headers: List[Header]): MatchableRequest = {
+      matchableRequest.copy(headers = headers)
+    }
+  }
 
 }
