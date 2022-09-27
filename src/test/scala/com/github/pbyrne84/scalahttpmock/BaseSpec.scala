@@ -15,8 +15,8 @@ import com.github.pbyrne84.scalahttpmock.expectation.{
 import com.github.pbyrne84.scalahttpmock.prettifier.CaseClassPrettifier
 import com.github.pbyrne84.scalahttpmock.service.URI
 import org.scalactic.Prettifier
-import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import sttp.model
 
 import scala.language.implicitConversions

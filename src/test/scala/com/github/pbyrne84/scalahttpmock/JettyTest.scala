@@ -3,8 +3,6 @@ package com.github.pbyrne84.scalahttpmock
 import com.github.pbyrne84.scalahttpmock.expectation.MatchableRequest
 import jakarta.servlet.http.{HttpServletRequest, HttpServletResponse}
 import org.eclipse.jetty.server.{Handler, Request, Server}
-import org.eclipse.jetty.util.resource.Resource
-import org.eclipse.jetty.webapp.WebAppContext
 
 import java.util.EventListener
 import scala.jdk.CollectionConverters.MapHasAsScala

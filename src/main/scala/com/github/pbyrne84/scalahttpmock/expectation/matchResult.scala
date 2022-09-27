@@ -1,8 +1,6 @@
 package com.github.pbyrne84.scalahttpmock.expectation
 import com.github.pbyrne84.scalahttpmock.expectation.matcher._
 
-import scala.collection.immutable.Seq
-
 sealed trait SingleMatchResult {
   val success: Boolean
 }
