@@ -17,7 +17,9 @@ libraryDependencies ++= Seq(
   "org.eclipse.jetty" % "jetty-server" % "11.0.11",
   "org.eclipse.jetty" % "jetty-webapp" % "11.0.11",
   "com.softwaremill.sttp.client3" %% "core" % "3.7.2" % Test,
-  "org.mockito" % "mockito-core" % "4.6.1" % Test
+  "org.mockito" % "mockito-core" % "4.6.1" % Test,
+  "dev.zio" %% "zio" % "2.0.2" % Test,
+  "org.typelevel" %% "cats-effect" % "3.3.14" % Test
 )
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.13" % Test

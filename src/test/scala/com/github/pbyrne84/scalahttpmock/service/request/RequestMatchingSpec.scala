@@ -1,6 +1,5 @@
 package com.github.pbyrne84.scalahttpmock.service.request
 import com.github.pbyrne84.scalahttpmock.BaseSpec
-import com.github.pbyrne84.scalahttpmock.expectation.Method.GET
 import com.github.pbyrne84.scalahttpmock.expectation.matcher.HttpMethodMatcher
 import com.github.pbyrne84.scalahttpmock.expectation.{
   JsonResponse,

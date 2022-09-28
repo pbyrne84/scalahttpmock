@@ -12,12 +12,15 @@ import com.github.pbyrne84.scalahttpmock.expectation.{
   LocationResponse,
   ServiceExpectation
 }
+import com.github.pbyrne84.scalahttpmock.service.implementations.JettyMockService
 import com.github.pbyrne84.scalahttpmock.service.request.VerificationFailure
 import org.scalatest.BeforeAndAfter
 import sttp.client3._
 import sttp.model.StatusCode
 
 class TestServiceSpec extends BaseSpec with BeforeAndAfter {
+
+  import scala.concurrent.ExecutionContext.Implicits.global
 
   private val port = 9001
   private val service = JettyMockService.createFutureVersion(port)
