@@ -1,12 +1,17 @@
 package com.github.pbyrne84.scalahttpmock.expectation
+import cats.data.NonEmptyList
 import com.github.pbyrne84.scalahttpmock.expectation.matcher._
+
+object ServiceExpectation {
+  private val defaultResponses = NonEmptyList(JsonResponse(200, None), List.empty)
+}
 
 case class ServiceExpectation(
     headerMatchers: Seq[HeaderMatcher] = Vector(),
     httpMethodMatcher: HttpMethodMatcher = AnyHttpMethodMatcher,
     uriMatcher: UriMatcher = AnyUriMatcher,
     paramMatchers: Seq[ParamMatcher] = Vector(),
-    response: MatchedResponse = JsonResponse(200, None)
+    responses: NonEmptyList[MatchedResponse] = ServiceExpectation.defaultResponses
 ) extends Indentation {
 
   private val headersPrettyFormat = {
@@ -89,8 +94,26 @@ case class ServiceExpectation(
     paramMatchers = newParamMatchers
   )
 
-  def withResponse(newResponse: MatchedResponse): ServiceExpectation = copy(
-    response = newResponse
+  def withResponse(response: MatchedResponse): ServiceExpectation = copy(
+    responses = NonEmptyList(response, List.empty)
   )
+
+  def withResponses(head: MatchedResponse, tail: MatchedResponse*): ServiceExpectation = copy(
+    responses = NonEmptyList(head, tail.toList)
+  )
+
+  def addResponse(response: MatchedResponse): ServiceExpectation = copy(
+    responses = responses :+ response
+  )
+
+  def trimHeadResponseIfMorePending: ServiceExpectation = {
+    responses.tail match {
+      //this sort of stuff makes me very happy for some reason, empty list is not a nice thing to dance around
+      case ::(head, next) =>
+        copy(responses = NonEmptyList(head, next))
+      case Nil =>
+        this
+    }
+  }
 
 }

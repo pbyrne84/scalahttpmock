@@ -64,7 +64,7 @@ class RequestMatchingSpec extends BaseSpec with BeforeAndAfter {
         .thenReturn(successfulMatchResult)
 
       requestMatching.resolveResponse(request) shouldBe PotentialResponse(
-        Some(matchingExpectation.response),
+        Some(matchingExpectation.responses.head),
         List(successfulMatchResult),
         List(unsuccessfulMatchResult, successfulMatchResult)
       )
@@ -76,8 +76,8 @@ class RequestMatchingSpec extends BaseSpec with BeforeAndAfter {
         ServiceExpectation(httpMethodMatcher = HttpMethodMatcher.getMatcher)
 
       val matchingExpectation2 =
-        ServiceExpectation(httpMethodMatcher = HttpMethodMatcher.postMatcher,
-                           response = JsonResponse(200, Some("{}")))
+        ServiceExpectation(httpMethodMatcher = HttpMethodMatcher.postMatcher)
+          .withResponse(response = JsonResponse(200, Some("{}")))
 
       requestMatching.addExpectations(
         List(
@@ -102,7 +102,7 @@ class RequestMatchingSpec extends BaseSpec with BeforeAndAfter {
         .thenReturn(successfulMatchResultWithHigherScore)
 
       requestMatching.resolveResponse(request) shouldBe PotentialResponse(
-        maybeResponse = Some(matchingExpectation2.response),
+        maybeResponse = Some(matchingExpectation2.responses.head),
         successfulMatches =
           List(successfulMatchResultWithHigherScore, successfulMatchResultWithLowerScore),
         allAttempts = List(unsuccessfulMatchResult,
