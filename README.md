@@ -69,6 +69,16 @@ expectation then switched to an exact match for the verification.
 Sometimes too tight matching required in the expectation leads to
 very hard to debug failures whereas a verification tends to be clear.
 
+**withResponses** allows functionality similar to 
+```
+thenReturn()
+.thenReturn()
+.thenReturn()
+```
+
+For simple chaining for testing things like retries. The first 2 can fail and then the third
+can succeed etc.
+
 E.g.
 ```scala
 import com.github.pbyrne84.scalahttpmock.expectation.matcher.{JsonContentEquals, PostMatcher}

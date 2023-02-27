@@ -135,11 +135,10 @@ class TestServiceSpec extends BaseSpec with BeforeAndAfter {
   }
 
   "prioritise highest score when more than 1 match is equal" in {
-    val matchAllExpectation = ServiceExpectation(response = JsonResponse(203))
+    val matchAllExpectation = ServiceExpectation().withResponse(JsonResponse(203))
     val expectedJsonResponse = """{"a" : "4"}"""
-    val matchUrlExpectation = ServiceExpectation(uriMatcher = "/test/uri".asUriEquals,
-                                                 response =
-                                                   JsonResponse(200, Some(expectedJsonResponse)))
+    val matchUrlExpectation = ServiceExpectation(uriMatcher = "/test/uri".asUriEquals)
+      .withResponse(JsonResponse(200, Some(expectedJsonResponse)))
 
     service.addExpectation(matchAllExpectation)
     service.addExpectation(matchUrlExpectation)
@@ -159,9 +158,10 @@ class TestServiceSpec extends BaseSpec with BeforeAndAfter {
   "allow multiple params with the same name to be matched" in {
     val expectedJsonResponse = """{"a" : "4"}"""
     val matchUrlExpectation =
-      ServiceExpectation(uriMatcher = "/test/path".asPathEquals,
-                         paramMatchers = Vector(("a", "1"), ("a", "2")).asParamEquals,
-                         response = JsonResponse(200, Some(expectedJsonResponse)))
+      ServiceExpectation(
+        uriMatcher = "/test/path".asPathEquals,
+        paramMatchers = Vector(("a", "1"), ("a", "2")).asParamEquals
+      ).withResponse(response = JsonResponse(200, Some(expectedJsonResponse)))
 
     service.addExpectation(matchUrlExpectation)
     val uri = uri"http://localhost:$port/test/path?a=1&a=2"
@@ -174,9 +174,10 @@ class TestServiceSpec extends BaseSpec with BeforeAndAfter {
   "not fail on valid verification" in {
     val expectedJsonResponse = """{"a" : "4"}"""
     val matchUrlExpectation =
-      ServiceExpectation(uriMatcher = "/test/path".asPathEquals,
-                         paramMatchers = Vector(("a", "1"), ("a", "2")).asParamEquals,
-                         response = JsonResponse(200, Some(expectedJsonResponse)))
+      ServiceExpectation(
+        uriMatcher = "/test/path".asPathEquals,
+        paramMatchers = Vector(("a", "1"), ("a", "2")).asParamEquals
+      ).withResponse(response = JsonResponse(200, Some(expectedJsonResponse)))
 
     service.addExpectation(matchUrlExpectation)
     val uri = uri"http://localhost:$port/test/path?a=1&a=2"
@@ -192,9 +193,10 @@ class TestServiceSpec extends BaseSpec with BeforeAndAfter {
   "fail on invalid verification" in {
     val expectedJsonResponse = """{"a" : "4"}"""
     val matchUrlExpectation =
-      ServiceExpectation(uriMatcher = "/test/path".asPathEquals,
-                         paramMatchers = Vector(("a", "1"), ("a", "2")).asParamEquals,
-                         response = JsonResponse(200, Some(expectedJsonResponse)))
+      ServiceExpectation(
+        uriMatcher = "/test/path".asPathEquals,
+        paramMatchers = Vector(("a", "1"), ("a", "2")).asParamEquals
+      ).withResponse(response = JsonResponse(200, Some(expectedJsonResponse)))
 
     service.addExpectation(matchUrlExpectation)
     val uri = uri"http://localhost:$port/test/path?a=1&a=2"
@@ -209,4 +211,41 @@ class TestServiceSpec extends BaseSpec with BeforeAndAfter {
     )
   }
 
+  "allow chaining of responses repeating the last one" in {
+    val uriText = s"http://localhost:$port/test/path"
+    val responseJson = """{"a":"2"}"""
+    val payloadJson = """{"b":"4"}"""
+    val customHeader = Header("custom_header", "custom_header_value")
+    val expectation = ServiceExpectation()
+      .addHeader(HeaderEquals("a", "avalue"))
+      .withMethod(payloadJson.asJsonPostMatcher)
+      .withUri("/test/path".asUriEquals)
+      .withResponses(
+        JsonResponse(202, Some(responseJson), Vector(customHeader)),
+        JsonResponse(201, Some(responseJson), Vector(customHeader)),
+        JsonResponse(200, Some(responseJson), Vector(customHeader))
+      )
+
+    service.addExpectation(expectation)
+
+    val uri = uri"$uriText"
+    val request = basicRequest
+      .post(uri)
+      .header("a", "avalue")
+      .body(payloadJson)
+
+    val response = request.send()
+
+    response.code shouldBe StatusCode(202)
+
+    response.headers shouldHaveEntry ("Content-Type", "application/json")
+    response.headers shouldHaveEntry customHeader
+
+    response.body shouldBe Right(responseJson)
+
+    request.send().code shouldBe StatusCode(201)
+    request.send().code shouldBe StatusCode(200)
+    request.send().code shouldBe StatusCode(200)
+
+  }
 }

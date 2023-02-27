@@ -64,24 +64,34 @@ class RequestMatching(matchingAttempt: MatchingAttempt) {
   def resolveResponse(request: MatchableRequest): PotentialResponse = {
     serviceRequests += request
 
-    val attempts: List[MatchWithResponse] = expectations.toList.map {
-      (expectation: ServiceExpectation) =>
-        MatchWithResponse(matchingAttempt.tryMatching(expectation, request), expectation.response)
+    val attempts: Seq[(Int, MatchWithResponse)] = expectations.toList.zipWithIndex.map {
+      case (expectation: ServiceExpectation, index: Int) =>
+        index -> MatchWithResponse(matchingAttempt.tryMatching(expectation, request),
+                                   expectation.responses.head)
     }
 
     val sortedSuccessfulMatches =
-      attempts.filter(_.result.matches).sortBy(_.result.score.total).reverse
+      attempts.filter(_._2.result.matches).sortBy(_._2.result.score.total).reverse
 
     val maybeResponse = sortedSuccessfulMatches.headOption
-      .map { matchWithResult =>
-        Some(matchWithResult.expectationResponse)
+      .map {
+        case (index, matchWithResult) =>
+          //icky for now
+          expectations(index) = expectations(index).trimHeadResponseIfMorePending
+
+          Some(matchWithResult.expectationResponse)
       }
       .getOrElse {
         root.warn(s"no expectations have been setup")
         None
       }
 
-    PotentialResponse(maybeResponse, sortedSuccessfulMatches.map(_.result), attempts.map(_.result))
+    PotentialResponse(
+      maybeResponse = maybeResponse,
+      successfulMatches = sortedSuccessfulMatches.map(_._2.result),
+      allAttempts = attempts
+        .map(_._2.result)
+    )
   }
 
   def reset(): Unit = {
