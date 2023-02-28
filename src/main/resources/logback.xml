@@ -10,6 +10,7 @@
 
 
   <logger name="org.http4s" level="ERROR" />
+  <logger name="io.netty" level="ERROR" />
 
   <root level="INFO">
     <appender-ref ref="STDOUT" />

@@ -89,24 +89,23 @@ case class MatchingScore private[expectation] (total: Double, possible: Double) 
   def convertToSuccess: MatchingScore = MatchingScore(possible, possible)
 }
 
-case class AllMatchResult(headerMatchResults: Seq[HeaderMatchResult],
-                          httpMethodMatchResult: HttpMethodMatchResult,
-                          uriMatchResult: UriMatchResult,
-                          paramMatchResults: Seq[ParamMatchResult],
-                          contentMatchResult: ContentMatchResult)
-    extends Indentation {
+case class AllMatchResult(
+    headerMatchResults: Seq[HeaderMatchResult],
+    httpMethodMatchResult: HttpMethodMatchResult,
+    uriMatchResult: UriMatchResult,
+    paramMatchResults: Seq[ParamMatchResult],
+    contentMatchResult: ContentMatchResult
+) extends Indentation {
 
   val score: MatchingScore = {
     def totalManyHasScores(scores: Seq[HasScore]) =
-      scores.foldLeft(MatchingScore.empty) {
-        case (total: MatchingScore, current: HasScore) =>
-          total + current.matchingScore
+      scores.foldLeft(MatchingScore.empty) { case (total: MatchingScore, current: HasScore) =>
+        total + current.matchingScore
       }
 
     def totalManyScores(scores: Seq[MatchingScore]): MatchingScore = {
-      scores.foldLeft(MatchingScore.empty) {
-        case (total: MatchingScore, current: MatchingScore) =>
-          total + current
+      scores.foldLeft(MatchingScore.empty) { case (total: MatchingScore, current: MatchingScore) =>
+        total + current
       }
     }
 
@@ -114,11 +113,13 @@ case class AllMatchResult(headerMatchResults: Seq[HeaderMatchResult],
     val paramTotal = totalManyHasScores(paramMatchResults)
 
     totalManyScores(
-      Vector(headerTotal,
-             httpMethodMatchResult.matchingScore,
-             uriMatchResult.matchingScore,
-             paramTotal,
-             contentMatchResult.matchingScore)
+      Vector(
+        headerTotal,
+        httpMethodMatchResult.matchingScore,
+        uriMatchResult.matchingScore,
+        paramTotal,
+        contentMatchResult.matchingScore
+      )
     )
   }
   val matches: Boolean =
@@ -135,8 +136,7 @@ case class AllMatchResult(headerMatchResults: Seq[HeaderMatchResult],
 
 }
 
-class AllMatchResultPrettifier private[expectation] (allMatchResult: AllMatchResult)
-    extends Indentation {
+class AllMatchResultPrettifier private[expectation] (allMatchResult: AllMatchResult) extends Indentation {
 
   def prettifyResult: String = {
     val invalidErrors = calculateInvalidErrors
@@ -153,14 +153,17 @@ class AllMatchResultPrettifier private[expectation] (allMatchResult: AllMatchRes
     val failedParams: Seq[ParamMatchResult] = allMatchResult.nonMatchingParams
 
     Vector(
-      mapError(allMatchResult.httpMethodMatchResult.success,
-               s"METHOD ${allMatchResult.httpMethodMatchResult.httpMethodMatcher.prettyText}"),
+      mapError(
+        allMatchResult.httpMethodMatchResult.success,
+        s"METHOD ${allMatchResult.httpMethodMatchResult.httpMethodMatcher.prettyText}"
+      ),
       mapError(failedHeaders.isEmpty, s"HEADERS (failed ${failedHeaders.size})"),
-      mapError(allMatchResult.uriMatchResult.success,
-               s"URI ${allMatchResult.uriMatchResult.uriMatcher.prettyText}"),
+      mapError(allMatchResult.uriMatchResult.success, s"URI ${allMatchResult.uriMatchResult.uriMatcher.prettyText}"),
       mapError(failedParams.isEmpty, s"PARAMS (failed ${failedParams.size})"),
-      mapError(allMatchResult.contentMatchResult.success,
-               s"CONTENT ${allMatchResult.contentMatchResult.contentMatcher.shortDescription}")
+      mapError(
+        allMatchResult.contentMatchResult.success,
+        s"CONTENT ${allMatchResult.contentMatchResult.contentMatcher.shortDescription}"
+      )
     ).collect { case Some(error) => error }
   }
 
@@ -174,9 +177,12 @@ class AllMatchResultPrettifier private[expectation] (allMatchResult: AllMatchRes
 
   private def createFailedRequestMessage(invalidErrors: Vector[String]): String = {
     def remapMultiple(mismatches: Seq[PrettyText]) = {
-      mapError(mismatches.isEmpty, s"""
+      mapError(
+        mismatches.isEmpty,
+        s"""
                                       |[ ${mismatches.map(x => x.prettyText).mkString(",\n")} ]
-        """.stripMargin.trim).getOrElse("None")
+        """.stripMargin.trim
+      ).getOrElse("None")
     }
 
     val successfulMatchingHeadersText = remapMultiple(
@@ -205,16 +211,18 @@ class AllMatchResultPrettifier private[expectation] (allMatchResult: AllMatchRes
     val indent = 29
     s"""
        |[INVALID] SCORE:${allMatchResult.score.possible}/${allMatchResult.score.total} failed {${invalidErrors
-         .mkString(", ")}}
+        .mkString(", ")}}
        |  Method  - $methodMatchText : ${allMatchResult.httpMethodMatchResult.httpMethodMatcher.prettyText}
        |  Headers - Matching     : ${indentNewLines(indent, successfulMatchingHeadersText)}
        |  Headers - Non matching : ${indentNewLines(indent, nonMatchingHeadersText)}
        |  Uri     - $uriMatchText : ${allMatchResult.uriMatchResult.uriMatcher.prettyText}
        |  Params  - Matching     : ${indentNewLines(indent, successfulMatchingParamsText)}
        |  Params  - Non matching : ${indentNewLines(indent, nonMatchingParamsText)}
-       |  Content - $contentMatchText : ${indentNewLines(2, {
-         allMatchResult.contentMatchResult.contentMatcher.prettyText
-       })}
+       |  Content - $contentMatchText : ${indentNewLines(
+        2, {
+          allMatchResult.contentMatchResult.contentMatcher.prettyText
+        }
+      )}
       """.stripMargin.trim
   }
 }

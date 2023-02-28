@@ -23,9 +23,7 @@ trait EqualsPrettyText extends PrettyText {
   val prettyText: String = s"""Equals("$name", "$value")""".stripMargin
 }
 
-case class HeaderMatches(name: String, valueRegex: Regex)
-    extends HeaderMatcher
-    with MatchPrettyText {
+case class HeaderMatches(name: String, valueRegex: Regex) extends HeaderMatcher with MatchPrettyText {
   override def maxScore: Double = 1
 
 }

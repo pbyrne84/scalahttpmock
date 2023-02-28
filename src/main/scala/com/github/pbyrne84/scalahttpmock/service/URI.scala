@@ -43,9 +43,8 @@ object URI {
             }
           }
           .groupBy(_._1)
-          .map {
-            case (name, paramNamesWithValues) =>
-              name -> paramNamesWithValues.map(_._2)
+          .map { case (name, paramNamesWithValues) =>
+            name -> paramNamesWithValues.map(_._2)
           }
 
         (padPath(path), Some(paramString), paramMap)
@@ -58,8 +57,10 @@ object URI {
 
   }
 }
-case class URI(uri: String,
-               path: String,
-               pathWithParams: String,
-               maybeQuery: Option[String],
-               params: Map[String, List[String]])
+case class URI(
+    uri: String,
+    path: String,
+    pathWithParams: String,
+    maybeQuery: Option[String],
+    params: Map[String, List[String]]
+)

@@ -9,8 +9,7 @@ import com.github.pbyrne84.scalahttpmock.expectation.{
 import io.circe.generic.semiauto.deriveEncoder
 import io.circe.{Encoder, Json}
 
-case class UnSuccessfulResponse(request: MatchableRequest, allAttempts: Seq[AllMatchResult])
-    extends Indentation {
+case class UnSuccessfulResponse(request: MatchableRequest, allAttempts: Seq[AllMatchResult]) extends Indentation {
 
   import RequestPrettification._
 
@@ -23,13 +22,15 @@ case class UnSuccessfulResponse(request: MatchableRequest, allAttempts: Seq[AllM
     val requestText = indentNewLines(2, request.prettyFormat, indentFirstLine = true)
 
     val attemptedText =
-      indentNewLines(4,
-                     allAttempts
-                       .sortBy(_.score.percentage)
-                       .reverse
-                       .map(_.prettifyResult)
-                       .mkString("\n\n"),
-                     indentFirstLine = true)
+      indentNewLines(
+        4,
+        allAttempts
+          .sortBy(_.score.percentage)
+          .reverse
+          .map(_.prettifyResult)
+          .mkString("\n\n"),
+        indentFirstLine = true
+      )
 
     s"""
       |The Request was not matched :-

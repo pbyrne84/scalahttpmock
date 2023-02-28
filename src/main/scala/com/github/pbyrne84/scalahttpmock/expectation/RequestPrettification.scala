@@ -27,14 +27,14 @@ class RequestPrettification extends Indentation {
     if (multiParams.isEmpty) {
       "[]"
     } else {
-      val convertedEntries = multiParams.toList.sortBy(_._1).flatMap {
-        case (name: String, entries: scala.Seq[String]) =>
+      val convertedEntries =
+        multiParams.toList.sortBy(_._1).flatMap { case (name: String, entries: scala.Seq[String]) =>
           if (entries.isEmpty) {
             List(multiEntryFormat.format(name, ""))
           } else {
             entries.map(value => multiEntryFormat.format(name, value))
           }
-      }
+        }
 
       s"""[ ${convertedEntries.mkString(",\n")} ]"""
     }
@@ -47,9 +47,8 @@ class RequestPrettification extends Indentation {
       val convertedEntries = headers.toList
         .map(header => header.name.value -> header.value)
         .sortBy(_._1)
-        .map {
-          case (name, value) =>
-            multiEntryFormat.format(name, value)
+        .map { case (name, value) =>
+          multiEntryFormat.format(name, value)
         }
 
       s"""[ ${convertedEntries.mkString(",\n")} ]"""

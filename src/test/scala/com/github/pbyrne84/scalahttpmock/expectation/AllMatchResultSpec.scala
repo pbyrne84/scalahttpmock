@@ -24,8 +24,7 @@ class AllMatchResultSpec extends BaseSpec {
     "show http method success" in {
       val actual = createAnyAllMatchResult
         .copy(
-          httpMethodMatchResult =
-            HttpMethodMatchResult(AnyHttpMethodMatcher, MatchingScore.success(10))
+          httpMethodMatchResult = HttpMethodMatchResult(AnyHttpMethodMatcher, MatchingScore.success(10))
         )
         .prettifyResult
       actual shouldBe
@@ -151,8 +150,7 @@ class AllMatchResultSpec extends BaseSpec {
 
       val actual = createAnyAllMatchResult
         .copy(
-          contentMatchResult =
-            ContentMatchResult(JsonContentEquals(json), MatchingScore.success(10))
+          contentMatchResult = ContentMatchResult(JsonContentEquals(json), MatchingScore.success(10))
         )
         .prettifyResult
 
@@ -174,12 +172,10 @@ class AllMatchResultSpec extends BaseSpec {
 
   "show success when they all match" in {
     val allMatchResult: AllMatchResult = createAnyAllMatchResult.copy(
-      headerMatchResults =
-        Vector(HeaderMatchResult(HeaderMatches("header_name", ".*".r), MatchingScore(1, 1))),
+      headerMatchResults = Vector(HeaderMatchResult(HeaderMatches("header_name", ".*".r), MatchingScore(1, 1))),
       httpMethodMatchResult = HttpMethodMatchResult(GetMatcher, MatchingScore(1, 1)),
       uriMatchResult = UriMatchResult(AnyUriMatcher, MatchingScore(1, 1)),
-      paramMatchResults =
-        Vector(ParamMatchResult(ParamEquals("param_name", ""), MatchingScore(1, 1))),
+      paramMatchResults = Vector(ParamMatchResult(ParamEquals("param_name", ""), MatchingScore(1, 1))),
       contentMatchResult = ContentMatchResult(AnyContentMatcher, MatchingScore(1, 1))
     )
 

@@ -17,16 +17,14 @@ class MatchingAttemptSpec extends BaseSpec with TableDrivenPropertyChecks with O
         (MatchingScore(0, 1), "/xxxx/yyya")
       )
 
-      forAll(examples) {
-        case (matches, matcherText: String) =>
-          val pathEquals = matcherText.asPathEquals
-          matchingAttempt
-            .tryMatching(
-              ServiceExpectation(uriMatcher = pathEquals),
-              createRequest.withUri("http://www.x.com/xxxx/yyyy?x=1&y=2")
-            )
-            .uriMatchResult shouldBe UriMatchResult(uriMatcher = pathEquals,
-                                                    matchingScore = matches)
+      forAll(examples) { case (matches, matcherText: String) =>
+        val pathEquals = matcherText.asPathEquals
+        matchingAttempt
+          .tryMatching(
+            ServiceExpectation(uriMatcher = pathEquals),
+            createRequest.withUri("http://www.x.com/xxxx/yyyy?x=1&y=2")
+          )
+          .uriMatchResult shouldBe UriMatchResult(uriMatcher = pathEquals, matchingScore = matches)
       }
     }
 
@@ -36,17 +34,16 @@ class MatchingAttemptSpec extends BaseSpec with TableDrivenPropertyChecks with O
         (MatchingScore.success(1), "/xxxx/(y){4}"),
         (MatchingScore(0, 1), "/xxxx/(y){5}")
       )
-      forAll(examples) {
-        case (score, matcherText: String) =>
-          val pathMatches = matcherText.asPathMatches
-          val expectation = ServiceExpectation(uriMatcher = pathMatches)
+      forAll(examples) { case (score, matcherText: String) =>
+        val pathMatches = matcherText.asPathMatches
+        val expectation = ServiceExpectation(uriMatcher = pathMatches)
 
-          matchingAttempt
-            .tryMatching(
-              expectation,
-              createRequest.withUri("http://www.x.com/xxxx/yyyy?x=1&y=2")
-            )
-            .uriMatchResult shouldBe UriMatchResult(uriMatcher = pathMatches, matchingScore = score)
+        matchingAttempt
+          .tryMatching(
+            expectation,
+            createRequest.withUri("http://www.x.com/xxxx/yyyy?x=1&y=2")
+          )
+          .uriMatchResult shouldBe UriMatchResult(uriMatcher = pathMatches, matchingScore = score)
       }
     }
 
@@ -59,9 +56,10 @@ class MatchingAttemptSpec extends BaseSpec with TableDrivenPropertyChecks with O
           expectation,
           createRequest.withUri("http://www.x.com/xxxx/yyyy")
         )
-        .uriMatchResult shouldBe UriMatchResult(uriMatcher = uriEquals,
-                                                matchingScore =
-                                                  MatchingScore.success(uriEquals.maxScore))
+        .uriMatchResult shouldBe UriMatchResult(
+        uriMatcher = uriEquals,
+        matchingScore = MatchingScore.success(uriEquals.maxScore)
+      )
 
     }
 
@@ -277,25 +275,24 @@ class MatchingAttemptSpec extends BaseSpec with TableDrivenPropertyChecks with O
         ("none matching content", false)
       )
 
-      forAll(examples) {
-        case (example, expectSuccess) =>
-          val contentMatches = ContentMatches(example.r)
-          val postWithContent = PostMatcher(contentMatches)
+      forAll(examples) { case (example, expectSuccess) =>
+        val contentMatches = ContentMatches(example.r)
+        val postWithContent = PostMatcher(contentMatches)
 
-          val expectation =
-            ServiceExpectation(httpMethodMatcher = postWithContent)
+        val expectation =
+          ServiceExpectation(httpMethodMatcher = postWithContent)
 
-          val request = createRequest
-            .withUri("http://www.x.com/xxxx/yyyy")
-            .withMethod(Method.POST)
-            .withBody(content)
+        val request = createRequest
+          .withUri("http://www.x.com/xxxx/yyyy")
+          .withMethod(Method.POST)
+          .withBody(content)
 
-          matchingAttempt
-            .tryMatching(expectation, request)
-            .contentMatchResult shouldBe ContentMatchResult(
-            contentMatches,
-            matchingScore = MatchingScore.fromMatch(expectSuccess, contentMatches)
-          )
+        matchingAttempt
+          .tryMatching(expectation, request)
+          .contentMatchResult shouldBe ContentMatchResult(
+          contentMatches,
+          matchingScore = MatchingScore.fromMatch(expectSuccess, contentMatches)
+        )
       }
     }
 
@@ -314,25 +311,24 @@ class MatchingAttemptSpec extends BaseSpec with TableDrivenPropertyChecks with O
         ("{}", false)
       )
 
-      forAll(examples) {
-        case (example, expectSuccess) =>
-          val jsonContentEquals = JsonContentEquals(example)
-          val postWithContent = PostMatcher(jsonContentEquals)
+      forAll(examples) { case (example, expectSuccess) =>
+        val jsonContentEquals = JsonContentEquals(example)
+        val postWithContent = PostMatcher(jsonContentEquals)
 
-          val expectation =
-            ServiceExpectation(httpMethodMatcher = postWithContent)
+        val expectation =
+          ServiceExpectation(httpMethodMatcher = postWithContent)
 
-          val request = createRequest
-            .withUri("http://www.x.com/xxxx/yyyy")
-            .withMethod(Method.POST)
-            .withBody(jsonContent)
+        val request = createRequest
+          .withUri("http://www.x.com/xxxx/yyyy")
+          .withMethod(Method.POST)
+          .withBody(jsonContent)
 
-          matchingAttempt
-            .tryMatching(expectation, request)
-            .contentMatchResult shouldBe ContentMatchResult(
-            jsonContentEquals,
-            MatchingScore.fromMatch(expectSuccess, jsonContentEquals)
-          )
+        matchingAttempt
+          .tryMatching(expectation, request)
+          .contentMatchResult shouldBe ContentMatchResult(
+          jsonContentEquals,
+          MatchingScore.fromMatch(expectSuccess, jsonContentEquals)
+        )
       }
     }
 
