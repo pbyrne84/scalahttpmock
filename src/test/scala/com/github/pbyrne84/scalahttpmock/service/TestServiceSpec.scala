@@ -1,19 +1,11 @@
 package com.github.pbyrne84.scalahttpmock.service
 
 import com.github.pbyrne84.scalahttpmock.BaseSpec
-import com.github.pbyrne84.scalahttpmock.expectation.matcher.{
-  GetMatcher,
-  HeaderEquals,
-  HttpMethodMatcher
-}
-import com.github.pbyrne84.scalahttpmock.expectation.{
-  Header,
-  JsonResponse,
-  LocationResponse,
-  ServiceExpectation
-}
-import com.github.pbyrne84.scalahttpmock.service.implementations.JettyMockService
+import com.github.pbyrne84.scalahttpmock.expectation.matcher.{GetMatcher, HeaderEquals, HttpMethodMatcher}
+import com.github.pbyrne84.scalahttpmock.expectation.{Header, JsonResponse, LocationResponse, ServiceExpectation}
+import com.github.pbyrne84.scalahttpmock.service.implementations.NettyMockServer
 import com.github.pbyrne84.scalahttpmock.service.request.VerificationFailure
+import io.netty.util.internal.logging.{InternalLoggerFactory, Slf4JLoggerFactory}
 import org.scalatest.BeforeAndAfter
 import sttp.client3._
 import sttp.model.StatusCode
@@ -22,9 +14,11 @@ class TestServiceSpec extends BaseSpec with BeforeAndAfter {
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
+  InternalLoggerFactory.setDefaultFactory(Slf4JLoggerFactory.INSTANCE)
+
   private val port = 9001
-  private val service = JettyMockService.createFutureVersion(port)
-  service.start()
+  private val service = NettyMockServer.createFutureVersion(port)
+  service.start
   implicit val backend: SttpBackend[Identity, Any] = HttpURLConnectionBackend()
 
   import sttp.client3.quick._

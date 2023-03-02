@@ -2,16 +2,7 @@ package com.github.pbyrne84.scalahttpmock
 
 import com.github.pbyrne84.scalahttpmock.expectation.Method.GET
 import com.github.pbyrne84.scalahttpmock.expectation.matcher._
-import com.github.pbyrne84.scalahttpmock.expectation.{
-  AllMatchResult,
-  ContentMatchResult,
-  Header,
-  HttpMethodMatchResult,
-  MatchableRequest,
-  MatchingScore,
-  Method,
-  UriMatchResult
-}
+import com.github.pbyrne84.scalahttpmock.expectation._
 import com.github.pbyrne84.scalahttpmock.prettifier.CaseClassPrettifier
 import com.github.pbyrne84.scalahttpmock.service.URI
 import org.scalactic.Prettifier

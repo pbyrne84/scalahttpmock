@@ -19,9 +19,8 @@ case class ServiceExpectation(
   }
 
   private def convertMatchers(matchers: Seq[PrettyText]) = {
-    matchers.foldLeft(List.empty[String]) {
-      case (convertedMatchers, currentMatcher) =>
-        convertedMatchers :+ currentMatcher.prettyText
+    matchers.foldLeft(List.empty[String]) { case (convertedMatchers, currentMatcher) =>
+      convertedMatchers :+ currentMatcher.prettyText
     }
   }
 
@@ -108,7 +107,7 @@ case class ServiceExpectation(
 
   def trimHeadResponseIfMorePending: ServiceExpectation = {
     responses.tail match {
-      //this sort of stuff makes me very happy for some reason, empty list is not a nice thing to dance around
+      // this sort of stuff makes me very happy for some reason, empty list is not a nice thing to dance around
       case ::(head, next) =>
         copy(responses = NonEmptyList(head, next))
       case Nil =>

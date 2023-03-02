@@ -1,12 +1,7 @@
 package com.github.pbyrne84.scalahttpmock.service.request
 import com.github.pbyrne84.scalahttpmock.BaseSpec
 import com.github.pbyrne84.scalahttpmock.expectation.matcher.HttpMethodMatcher
-import com.github.pbyrne84.scalahttpmock.expectation.{
-  JsonResponse,
-  MatchingAttempt,
-  Method,
-  ServiceExpectation
-}
+import com.github.pbyrne84.scalahttpmock.expectation.{JsonResponse, MatchingAttempt, Method, ServiceExpectation}
 import org.scalatest.BeforeAndAfter
 
 class RequestMatchingSpec extends BaseSpec with BeforeAndAfter {
@@ -103,11 +98,9 @@ class RequestMatchingSpec extends BaseSpec with BeforeAndAfter {
 
       requestMatching.resolveResponse(request) shouldBe PotentialResponse(
         maybeResponse = Some(matchingExpectation2.responses.head),
-        successfulMatches =
-          List(successfulMatchResultWithHigherScore, successfulMatchResultWithLowerScore),
-        allAttempts = List(unsuccessfulMatchResult,
-                           successfulMatchResultWithLowerScore,
-                           successfulMatchResultWithHigherScore)
+        successfulMatches = List(successfulMatchResultWithHigherScore, successfulMatchResultWithLowerScore),
+        allAttempts =
+          List(unsuccessfulMatchResult, successfulMatchResultWithLowerScore, successfulMatchResultWithHigherScore)
       )
     }
   }

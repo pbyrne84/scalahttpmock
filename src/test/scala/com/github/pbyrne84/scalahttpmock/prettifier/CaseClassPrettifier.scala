@@ -23,8 +23,7 @@ object CaseClassPrettifier {
     classIsNonIterableProduct(v) || classIsIteratorContainingCaseClasses(v)
   }
 
-  /**
-    * Collections are case classes
+  /** Collections are case classes
     * @param v
     * @return
     */

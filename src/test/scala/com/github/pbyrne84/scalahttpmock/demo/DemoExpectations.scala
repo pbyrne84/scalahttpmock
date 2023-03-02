@@ -1,11 +1,7 @@
 package com.github.pbyrne84.scalahttpmock.demo
 
 import com.github.pbyrne84.scalahttpmock.expectation.matcher.UriEquals
-import com.github.pbyrne84.scalahttpmock.expectation.{
-  JsonResponse,
-  LocationResponse,
-  ServiceExpectation
-}
+import com.github.pbyrne84.scalahttpmock.expectation.{JsonResponse, LocationResponse, ServiceExpectation}
 object DemoExpectations {
 
   val expectations: List[ServiceExpectation] = {

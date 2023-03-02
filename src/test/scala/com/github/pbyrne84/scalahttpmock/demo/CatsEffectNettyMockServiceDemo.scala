@@ -1,24 +1,24 @@
 package com.github.pbyrne84.scalahttpmock.demo
 
 import cats.effect.{ExitCode, IO, IOApp}
-import com.github.pbyrne84.scalahttpmock.demo.ioexecutors.CEMockServiceExecutor
-import com.github.pbyrne84.scalahttpmock.service.implementations.JettyMockService
+import com.github.pbyrne84.scalahttpmock.demo.ioexecutors.CENettyMockServiceExecutor
+import com.github.pbyrne84.scalahttpmock.service.implementations.NettyMockServer
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.FiniteDuration
 
-object CatsEffectJettyMockServiceDemo extends IOApp {
+object CatsEffectNettyMockServiceDemo extends IOApp {
 
   private val port = 8080
 
   override def run(args: List[String]): IO[ExitCode] = {
 
-    val catsEffectMockServiceExecutor = new CEMockServiceExecutor()
+    val catsEffectMockServiceExecutor = new CENettyMockServiceExecutor()
     val jettyMockService =
-      new JettyMockService(port, catsEffectMockServiceExecutor)
+      new NettyMockServer(port, catsEffectMockServiceExecutor)
 
     val eventualShutdownService: IO[Either[Throwable, Unit]] = for {
-      runningService <- jettyMockService.start()
+      runningService <- jettyMockService.start
       _ = DemoExpectations.expectations.map(jettyMockService.addExpectation)
       _ <- IO.sleep(FiniteDuration(length = 60, unit = TimeUnit.SECONDS))
       shutdownService <- runningService.shutDown()
