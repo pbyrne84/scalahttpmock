@@ -1,8 +1,8 @@
 package com.github.pbyrne84.scalahttpmock.service.implementations
 
 import com.github.pbyrne84.scalahttpmock.service.request.RequestMatching
+import io.netty.channel.ChannelInitializer
 import io.netty.channel.socket.SocketChannel
-import io.netty.channel.{ChannelInitializer, EventLoopGroup}
 import io.netty.handler.codec.http.{HttpObjectAggregator, HttpServerCodec}
 import io.netty.handler.ssl.SslContext
 

@@ -20,9 +20,10 @@ class ZIONettyMockServiceExecutor extends NettyMockServiceExecutor[Task] with St
       logger.info("starting")
 
       channelFuture.sync.channel
+      import zio.interop.catz._
 
       new RunningServer[Task] {
-        override def shutDown(): Task[Either[Throwable, Unit]] = {
+        override def shutDown: Task[Either[Throwable, Unit]] = {
           for {
             result <- ZIO.attempt(shutDownEventLoopGroups)
           } yield result
@@ -36,8 +37,16 @@ class ZIONettyMockServiceExecutor extends NettyMockServiceExecutor[Task] with St
             _ <- Try(workerGroup.shutdownGracefully(1, 1, TimeUnit.SECONDS).sync.get).toEither
           } yield ()
         }
+
+        override def wrapInTask[A](call: => A): Task[A] = ZIO.attempt(call)
       }
     }
   }
 
+  override def wrapInEffect[A](call: => A): Task[A] =
+    ZIO.attempt(call)
+
+  override def wrapFailure[A](call: => Task[A])(errorRemapping: Throwable => Throwable): Task[A] = {
+    call.mapError(error => errorRemapping(error))
+  }
 }

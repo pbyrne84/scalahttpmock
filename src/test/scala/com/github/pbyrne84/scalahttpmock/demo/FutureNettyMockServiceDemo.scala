@@ -20,7 +20,7 @@ object FutureNettyMockServiceDemo {
       runningService <- nettyMockService.start
       _ = DemoExpectations.expectations.map(nettyMockService.addExpectation)
       _ = Thread.sleep(6000)
-      shutdown <- runningService.shutDown()
+      shutdown <- runningService.shutDown
 
     } yield shutdown
 

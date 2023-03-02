@@ -1,11 +1,5 @@
 package com.github.pbyrne84.scalahttpmock.service.request
-import com.github.pbyrne84.scalahttpmock.expectation.{
-  AllMatchResult,
-  MatchableRequest,
-  MatchedResponse,
-  MatchingAttempt,
-  ServiceExpectation
-}
+import com.github.pbyrne84.scalahttpmock.expectation._
 
 import scala.collection.mutable.ListBuffer
 class VerificationFailure private[this] (message: String) extends RuntimeException(message) {

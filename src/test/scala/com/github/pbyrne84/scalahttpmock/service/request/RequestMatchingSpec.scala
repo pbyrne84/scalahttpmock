@@ -1,7 +1,7 @@
 package com.github.pbyrne84.scalahttpmock.service.request
-import com.github.pbyrne84.scalahttpmock.BaseSpec
 import com.github.pbyrne84.scalahttpmock.expectation.matcher.HttpMethodMatcher
-import com.github.pbyrne84.scalahttpmock.expectation.{JsonResponse, MatchingAttempt, Method, ServiceExpectation}
+import com.github.pbyrne84.scalahttpmock.expectation.{JsonResponse, MatchingAttempt, MockHttpMethod, ServiceExpectation}
+import com.github.pbyrne84.scalahttpmock.shared.BaseSpec
 import org.scalatest.BeforeAndAfter
 
 class RequestMatchingSpec extends BaseSpec with BeforeAndAfter {
@@ -18,7 +18,7 @@ class RequestMatchingSpec extends BaseSpec with BeforeAndAfter {
   "resolve response" should {
 
     "return empty response with empty matches when no expectations are set up" in {
-      requestMatching.resolveResponse(createRequest) shouldBe PotentialResponse(
+      requestMatching.resolveResponse(testMatchFactory.createRequest) shouldBe PotentialResponse(
         None,
         Vector(),
         Vector()
@@ -29,8 +29,8 @@ class RequestMatchingSpec extends BaseSpec with BeforeAndAfter {
       val expectation = ServiceExpectation()
       requestMatching.addExpectation(expectation)
 
-      val request = createRequest
-      val unsuccessfulMatchResult = createAnyAllMatchResult
+      val request = testMatchFactory.createRequest
+      val unsuccessfulMatchResult = testMatchFactory.createAnyAllMatchResult
 
       when(matchingAttempt.tryMatching(expectation, request))
         .thenReturn(unsuccessfulMatchResult)
@@ -48,9 +48,9 @@ class RequestMatchingSpec extends BaseSpec with BeforeAndAfter {
 
       requestMatching.addExpectations(List(nonMatchingExpectation, matchingExpectation))
 
-      val request = createRequest
-      val unsuccessfulMatchResult = createAnyAllMatchResult
-      val successfulMatchResult = createSuccessfulMatchResult(10)
+      val request = testMatchFactory.createRequest
+      val unsuccessfulMatchResult = testMatchFactory.createAnyAllMatchResult
+      val successfulMatchResult = testMatchFactory.createSuccessfulMatchResult(10)
 
       when(matchingAttempt.tryMatching(nonMatchingExpectation, request))
         .thenReturn(unsuccessfulMatchResult)
@@ -82,10 +82,10 @@ class RequestMatchingSpec extends BaseSpec with BeforeAndAfter {
         )
       )
 
-      val request = createRequest
-      val unsuccessfulMatchResult = createAnyAllMatchResult
-      val successfulMatchResultWithLowerScore = createSuccessfulMatchResult(10)
-      val successfulMatchResultWithHigherScore = createSuccessfulMatchResult(20)
+      val request = testMatchFactory.createRequest
+      val unsuccessfulMatchResult = testMatchFactory.createAnyAllMatchResult
+      val successfulMatchResultWithLowerScore = testMatchFactory.createSuccessfulMatchResult(10)
+      val successfulMatchResultWithHigherScore = testMatchFactory.createSuccessfulMatchResult(20)
 
       when(matchingAttempt.tryMatching(nonMatchingExpectation, request))
         .thenReturn(unsuccessfulMatchResult)
@@ -112,18 +112,18 @@ class RequestMatchingSpec extends BaseSpec with BeforeAndAfter {
     }
 
     "raise an error when there are calls and none match" in {
-      val request1 = createRequest
+      val request1 = testMatchFactory.createRequest
       requestMatching.resolveResponse(request1)
-      val request2 = createRequest
+      val request2 = testMatchFactory.createRequest
       requestMatching.resolveResponse(request2)
 
       val verifyExpectation = ServiceExpectation(httpMethodMatcher = HttpMethodMatcher.postMatcher)
 
       when(matchingAttempt.tryMatching(verifyExpectation, request1))
-        .thenReturn(createAnyAllMatchResult)
+        .thenReturn(testMatchFactory.createAnyAllMatchResult)
 
       when(matchingAttempt.tryMatching(verifyExpectation, request2))
-        .thenReturn(createAnyAllMatchResult)
+        .thenReturn(testMatchFactory.createAnyAllMatchResult)
 
       a[VerificationFailure] should be thrownBy requestMatching.verifyCall(
         verifyExpectation
@@ -131,56 +131,56 @@ class RequestMatchingSpec extends BaseSpec with BeforeAndAfter {
     }
 
     "not raise an error when there are calls and one matches" in {
-      val request1 = createRequest
+      val request1 = testMatchFactory.createRequest
       requestMatching.resolveResponse(request1)
 
-      val request2 = createRequest.copy(method = Method.POST)
+      val request2 = testMatchFactory.createRequest.copy(method = MockHttpMethod.POST)
       requestMatching.resolveResponse(request2)
 
       val verifyExpectation = ServiceExpectation(httpMethodMatcher = HttpMethodMatcher.postMatcher)
 
       when(matchingAttempt.tryMatching(verifyExpectation, request1))
-        .thenReturn(createAnyAllMatchResult)
+        .thenReturn(testMatchFactory.createAnyAllMatchResult)
 
       when(matchingAttempt.tryMatching(verifyExpectation, request2))
-        .thenReturn(createSuccessfulMatchResult(10))
+        .thenReturn(testMatchFactory.createSuccessfulMatchResult(10))
 
       requestMatching.verifyCall(verifyExpectation)
     }
 
     "error when there are calls and one matches but it is supposed to match twice" in {
-      val request1 = createRequest
+      val request1 = testMatchFactory.createRequest
       requestMatching.resolveResponse(request1)
 
-      val request2 = createRequest.copy(method = Method.POST)
+      val request2 = testMatchFactory.createRequest.copy(method = MockHttpMethod.POST)
       requestMatching.resolveResponse(request2)
 
       val verifyExpectation = ServiceExpectation(httpMethodMatcher = HttpMethodMatcher.postMatcher)
 
       when(matchingAttempt.tryMatching(verifyExpectation, request1))
-        .thenReturn(createAnyAllMatchResult)
+        .thenReturn(testMatchFactory.createAnyAllMatchResult)
 
       when(matchingAttempt.tryMatching(verifyExpectation, request2))
-        .thenReturn(createSuccessfulMatchResult(10))
+        .thenReturn(testMatchFactory.createSuccessfulMatchResult(10))
 
       a[VerificationFailure] should be thrownBy requestMatching.verifyCall(verifyExpectation, 2)
     }
 
     "not error when the expectation does actually match 2 requests" in {
-      val request1 = createRequest
+      val request1 = testMatchFactory.createRequest
       requestMatching.resolveResponse(request1)
 
-      val request2 = createRequest.copy(method = Method.POST)
+      val request2 = testMatchFactory.createRequest.copy(method = MockHttpMethod.POST)
       requestMatching.resolveResponse(request2)
       requestMatching.resolveResponse(request2)
 
       val verifyExpectation = ServiceExpectation(httpMethodMatcher = HttpMethodMatcher.postMatcher)
 
       when(matchingAttempt.tryMatching(verifyExpectation, request1))
-        .thenReturn(createAnyAllMatchResult)
+        .thenReturn(testMatchFactory.createAnyAllMatchResult)
 
       when(matchingAttempt.tryMatching(verifyExpectation, request2))
-        .thenReturn(createSuccessfulMatchResult(10))
+        .thenReturn(testMatchFactory.createSuccessfulMatchResult(10))
 
       requestMatching.verifyCall(verifyExpectation, 2)
     }

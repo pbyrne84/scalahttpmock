@@ -1,15 +1,16 @@
 package com.github.pbyrne84.scalahttpmock.expectation
 
-import com.github.pbyrne84.scalahttpmock.BaseSpec
+import com.github.pbyrne84.scalahttpmock.shared.BaseSpec
 
 class RequestPrettificationSpec extends BaseSpec {
 
   import RequestPrettification._
+  import com.github.pbyrne84.scalahttpmock.testextensions.MatchableRequestOps._
 
   "RequestPrettification" should {
 
     "format a default entry" in {
-      createRequest.prettyFormat shouldBe
+      testMatchFactory.createRequest.prettyFormat shouldBe
         """
           |Request[method="GET", path="/"](
           |  Uri            : "/",
@@ -23,7 +24,7 @@ class RequestPrettificationSpec extends BaseSpec {
 
     "format an entry with a uri that has params, params will be displayed alphabetically" in {
       val uriText = "http://xxx.com/a/b/c?f=1&d=2&e=&e=10"
-      val actual = createRequest
+      val actual = testMatchFactory.createRequest
         .withUri(uriText)
         .prettyFormat
 
@@ -52,7 +53,7 @@ class RequestPrettificationSpec extends BaseSpec {
           Header("e", "10")
         )
 
-      val actual = createRequest.withHeaders(headers).prettyFormat
+      val actual = testMatchFactory.createRequest.withHeaders(headers).prettyFormat
       actual shouldBe
         s"""
            |Request[method="GET", path="/"](
@@ -70,7 +71,7 @@ class RequestPrettificationSpec extends BaseSpec {
     }
 
     "format an entry with a body" in {
-      val actual = createRequest
+      val actual = testMatchFactory.createRequest
         .withBody("content")
         .prettyFormat
 

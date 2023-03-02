@@ -8,7 +8,7 @@ case class MatchableRequest(
     uriPath: String,
     asPathWithParams: String,
     headers: List[Header],
-    method: Method,
+    method: MockHttpMethod,
     multiParams: Map[String, Seq[String]],
     maybeContentAsString: Option[String],
     uri: String
@@ -29,7 +29,7 @@ object MatchableRequest {
       }
       .toList
 
-    val method = Method
+    val method = MockHttpMethod
       .fromString(request.method().name())
       .getOrElse(throw new RuntimeException(s"${request.method()} method cannot be mapped"))
 

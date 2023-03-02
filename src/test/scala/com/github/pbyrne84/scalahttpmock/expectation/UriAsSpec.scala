@@ -1,7 +1,10 @@
 package com.github.pbyrne84.scalahttpmock.expectation
-import com.github.pbyrne84.scalahttpmock.BaseSpec
+
+import com.github.pbyrne84.scalahttpmock.shared.BaseSpec
 
 class UriAsSpec extends BaseSpec {
+
+  import com.github.pbyrne84.scalahttpmock.testextensions.TestStringOps._
 
   "uri as" should {
 

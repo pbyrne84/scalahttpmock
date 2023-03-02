@@ -1,12 +1,12 @@
 package com.github.pbyrne84.scalahttpmock.demo.ioexecutors.netty
 
 import io.netty.bootstrap.ServerBootstrap
-import io.netty.channel.{Channel, ChannelOption, EventLoopGroup}
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.NioServerSocketChannel
+import io.netty.channel.{Channel, ChannelOption, EventLoopGroup}
 import io.netty.handler.logging.{LogLevel, LoggingHandler}
-import io.netty.handler.ssl.{SslContext, SslContextBuilder}
 import io.netty.handler.ssl.util.SelfSignedCertificate
+import io.netty.handler.ssl.{SslContext, SslContextBuilder}
 
 import java.util.concurrent.TimeUnit;
 
