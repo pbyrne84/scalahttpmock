@@ -9,7 +9,7 @@ import com.github.pbyrne84.scalahttpmock.expectation.{
 import com.github.pbyrne84.scalahttpmock.service.request.{RequestMatching, UnSuccessfulResponse}
 import com.typesafe.scalalogging.StrictLogging
 import io.netty.buffer.Unpooled
-import io.netty.channel.{ChannelFutureListener, ChannelHandlerContext, EventLoopGroup, SimpleChannelInboundHandler}
+import io.netty.channel.{ChannelFutureListener, ChannelHandlerContext, SimpleChannelInboundHandler}
 import io.netty.handler.codec.http._
 
 class NettyMockServerHandler(requestMatching: RequestMatching)

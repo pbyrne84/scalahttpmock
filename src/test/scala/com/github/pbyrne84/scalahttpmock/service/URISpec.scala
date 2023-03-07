@@ -1,6 +1,6 @@
 package com.github.pbyrne84.scalahttpmock.service
 
-import com.github.pbyrne84.scalahttpmock.BaseSpec
+import com.github.pbyrne84.scalahttpmock.shared.BaseSpec
 
 class URISpec extends BaseSpec {
 

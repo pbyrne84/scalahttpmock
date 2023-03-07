@@ -12,6 +12,8 @@ object ZioNettyMockServiceDemo extends ZIOAppDefault {
 
   override def run = {
 
+    import zio.interop.catz._
+
     val zIOMockServiceExecutor = new ZIONettyMockServiceExecutor()
     val jettyMockService =
       new NettyMockServer(port, zIOMockServiceExecutor)
@@ -19,7 +21,7 @@ object ZioNettyMockServiceDemo extends ZIOAppDefault {
       runningService <- jettyMockService.start
       _ = DemoExpectations.expectations.map(jettyMockService.addExpectation)
       _ <- ZIO.sleep(Duration.ofSeconds(60))
-      shutdownService <- runningService.shutDown()
+      shutdownService <- runningService.shutDown
     } yield shutdownService
   }
 

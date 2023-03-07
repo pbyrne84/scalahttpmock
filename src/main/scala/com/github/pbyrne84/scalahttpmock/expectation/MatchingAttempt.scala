@@ -2,28 +2,6 @@ package com.github.pbyrne84.scalahttpmock.expectation
 
 import com.github.pbyrne84.scalahttpmock.expectation.matcher._
 
-object Method {
-  private val options: Map[String, Method] = List(POST, GET, PUT, DELETE, PATCH).map { value =>
-    value.text -> value
-  }.toMap
-  def fromString(text: String): Option[Method] = {
-    options.get(text.toUpperCase)
-  }
-
-  case object POST extends Method("POST")
-
-  case object GET extends Method("GET")
-
-  case object PUT extends Method("PUT")
-
-  case object DELETE extends Method("DELETE")
-
-  case object PATCH extends Method("PATCH")
-
-}
-
-sealed abstract class Method(val text: String)
-
 case class CaseInsensitiveString(value: String) {
 
   def ==(other: CaseInsensitiveString): Boolean = {
@@ -129,10 +107,7 @@ class MatchingAttempt {
   private def tryMatchingParams(expectation: ServiceExpectation, request: MatchableRequest): Seq[ParamMatchResult] = {
 
     def matchSingleParam(paramMatcher: ParamMatcher) = {
-      val params = request.multiParams.map(
-        // Sequences are immutable not default in this scope
-        paramWithValues => (paramWithValues._1, paramWithValues._2.toList)
-      )
+      val params = request.multiParams.map(paramWithValues => (paramWithValues._1, paramWithValues._2))
       val matches = paramMatcher match {
         case paramMatches: ParamMatches =>
           val filter = (param: (String, Seq[String])) => {
@@ -167,7 +142,7 @@ class MatchingAttempt {
     val contentMatcher = expectation.contentMatcher
     val contentAsString = request.maybeContentAsString.getOrElse("")
 
-    val success: MatchingScore = contentMatcher match {
+    val matchingScore: MatchingScore = contentMatcher match {
       case AnyContentMatcher => MatchingScore.success(AnyContentMatcher.maxScore)
 
       case contentEquals: ContentEquals =>
@@ -199,7 +174,7 @@ class MatchingAttempt {
         }
     }
 
-    ContentMatchResult(contentMatcher, success)
+    ContentMatchResult(contentMatcher, matchingScore)
   }
 
 }

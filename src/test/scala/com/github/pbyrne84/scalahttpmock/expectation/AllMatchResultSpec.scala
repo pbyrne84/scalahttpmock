@@ -1,13 +1,15 @@
 package com.github.pbyrne84.scalahttpmock.expectation
 
-import com.github.pbyrne84.scalahttpmock.BaseSpec
 import com.github.pbyrne84.scalahttpmock.expectation.matcher._
+import com.github.pbyrne84.scalahttpmock.shared.BaseSpec
 
 class AllMatchResultSpec extends BaseSpec {
 
+  import com.github.pbyrne84.scalahttpmock.testextensions.TestStringOps._
+
   "prettify result to be " should {
     "show failure where all single items have an empty score" in {
-      val actual = createAnyAllMatchResult.prettifyResult
+      val actual = testMatchFactory.createAnyAllMatchResult.prettifyResult
       actual shouldBe
         """
             |[INVALID] SCORE:0.0/0.0 failed {METHOD Any, URI Any, CONTENT Any}
@@ -22,7 +24,7 @@ class AllMatchResultSpec extends BaseSpec {
     }
 
     "show http method success" in {
-      val actual = createAnyAllMatchResult
+      val actual = testMatchFactory.createAnyAllMatchResult
         .copy(
           httpMethodMatchResult = HttpMethodMatchResult(AnyHttpMethodMatcher, MatchingScore.success(10))
         )
@@ -41,7 +43,7 @@ class AllMatchResultSpec extends BaseSpec {
     }
 
     "show failed headers with successful headers" in {
-      val allMatchResult: AllMatchResult = createAnyAllMatchResult.copy(
+      val allMatchResult: AllMatchResult = testMatchFactory.createAnyAllMatchResult.copy(
         headerMatchResults = Vector(
           HeaderMatchResult(HeaderMatches("header_name1", ".*a".r), MatchingScore.success(10)),
           HeaderMatchResult(HeaderMatches("header_name2", ".*b".r), MatchingScore.success(10)),
@@ -67,7 +69,7 @@ class AllMatchResultSpec extends BaseSpec {
     }
 
     "show successful uri" in {
-      val allMatchResult: AllMatchResult = createAnyAllMatchResult.copy(
+      val allMatchResult: AllMatchResult = testMatchFactory.createAnyAllMatchResult.copy(
         uriMatchResult = UriMatchResult("http://x/z/b".asUriEquals, MatchingScore.success(10))
       )
       val actual = allMatchResult.prettifyResult
@@ -86,7 +88,7 @@ class AllMatchResultSpec extends BaseSpec {
     }
 
     "show failed params with successful params" in {
-      val allMatchResult: AllMatchResult = createAnyAllMatchResult.copy(
+      val allMatchResult: AllMatchResult = testMatchFactory.createAnyAllMatchResult.copy(
         paramMatchResults = Vector(
           ParamMatchResult(ParamMatches("param_name1", ".*a".r), MatchingScore.success(10)),
           ParamMatchResult(ParamMatches("param_name2", ".*b".r), MatchingScore.success(10)),
@@ -119,7 +121,7 @@ class AllMatchResultSpec extends BaseSpec {
           |}
         """.stripMargin
 
-      val actual = createAnyAllMatchResult
+      val actual = testMatchFactory.createAnyAllMatchResult
         .copy(
           contentMatchResult = ContentMatchResult(JsonContentEquals(json), MatchingScore.fail(10))
         )
@@ -148,7 +150,7 @@ class AllMatchResultSpec extends BaseSpec {
           |}
         """.stripMargin
 
-      val actual = createAnyAllMatchResult
+      val actual = testMatchFactory.createAnyAllMatchResult
         .copy(
           contentMatchResult = ContentMatchResult(JsonContentEquals(json), MatchingScore.success(10))
         )
@@ -171,7 +173,7 @@ class AllMatchResultSpec extends BaseSpec {
   }
 
   "show success when they all match" in {
-    val allMatchResult: AllMatchResult = createAnyAllMatchResult.copy(
+    val allMatchResult: AllMatchResult = testMatchFactory.createAnyAllMatchResult.copy(
       headerMatchResults = Vector(HeaderMatchResult(HeaderMatches("header_name", ".*".r), MatchingScore(1, 1))),
       httpMethodMatchResult = HttpMethodMatchResult(GetMatcher, MatchingScore(1, 1)),
       uriMatchResult = UriMatchResult(AnyUriMatcher, MatchingScore(1, 1)),

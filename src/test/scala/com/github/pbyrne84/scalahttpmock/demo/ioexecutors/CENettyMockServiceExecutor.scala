@@ -21,9 +21,9 @@ class CENettyMockServiceExecutor extends NettyMockServiceExecutor[IO] with Stric
       channelFuture.sync.channel
 
       new RunningServer[IO] {
-        override def shutDown(): IO[Either[Throwable, Unit]] = {
-          println("shutting down")
+        override def shutDown: IO[Either[Throwable, Unit]] = {
           (for {
+            _ <- IO(println("shutting down"))
             _ <- IO(logger.info("shutting bossGroup"))
             _ <- IO(bossGroup.shutdownGracefully(1, 1, TimeUnit.SECONDS).sync.get)
             _ <- IO(logger.info("shutting workerGroup"))
@@ -32,7 +32,16 @@ class CENettyMockServiceExecutor extends NettyMockServiceExecutor[IO] with Stric
             .map(Right.apply)
             .handleError(e => Left(e))
         }
+
+        override def wrapInTask[A](call: => A): IO[A] = IO(call)
       }
     }
   }
+
+  override def wrapInEffect[A](call: => A): IO[A] = IO(call)
+
+  override def wrapFailure[A](call: => IO[A])(errorRemapping: Throwable => Throwable): IO[A] = {
+    call.handleErrorWith(e => IO.raiseError(errorRemapping(e)))
+  }
+
 }

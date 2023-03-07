@@ -1,12 +1,12 @@
 package com.github.pbyrne84.scalahttpmock.service.request
 
-import com.github.pbyrne84.scalahttpmock.BaseSpec
+import com.github.pbyrne84.scalahttpmock.shared.BaseSpec
 
 class UnSuccessfulResponseSpec extends BaseSpec {
   "prettyText" should {
 
     "format request with no expectations (match attempts)" in {
-      val actual = UnSuccessfulResponse(createRequest, Seq.empty).prettyFormat
+      val actual = UnSuccessfulResponse(testMatchFactory.createRequest, Seq.empty).prettyFormat
 
       actual shouldBe
         """
@@ -23,8 +23,8 @@ class UnSuccessfulResponseSpec extends BaseSpec {
     }
 
     "format request with expectation (match attempt)" in {
-      val allAttempts = List(createAnyAllMatchResult)
-      val actual = UnSuccessfulResponse(createRequest, allAttempts).prettyFormat
+      val allAttempts = List(testMatchFactory.createAnyAllMatchResult)
+      val actual = UnSuccessfulResponse(testMatchFactory.createRequest, allAttempts).prettyFormat
 
       actual shouldBe
         """
@@ -49,8 +49,9 @@ class UnSuccessfulResponseSpec extends BaseSpec {
     }
 
     "format request with multiple expectations (match attempts) sorting by highest score" in {
-      val allAttempts = List(createMatchResultWithScore(8, 11), createMatchResultWithScore(8, 10))
-      val actual = UnSuccessfulResponse(createRequest, allAttempts).prettyFormat
+      val allAttempts =
+        List(testMatchFactory.createMatchResultWithScore(8, 11), testMatchFactory.createMatchResultWithScore(8, 10))
+      val actual = UnSuccessfulResponse(testMatchFactory.createRequest, allAttempts).prettyFormat
 
       actual shouldBe
         """

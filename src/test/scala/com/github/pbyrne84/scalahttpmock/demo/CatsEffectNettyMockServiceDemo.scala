@@ -21,7 +21,7 @@ object CatsEffectNettyMockServiceDemo extends IOApp {
       runningService <- jettyMockService.start
       _ = DemoExpectations.expectations.map(jettyMockService.addExpectation)
       _ <- IO.sleep(FiniteDuration(length = 60, unit = TimeUnit.SECONDS))
-      shutdownService <- runningService.shutDown()
+      shutdownService <- runningService.shutDown
     } yield shutdownService
 
     eventualShutdownService.map {
