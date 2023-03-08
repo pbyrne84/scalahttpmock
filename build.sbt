@@ -22,18 +22,14 @@ lazy val commonSettings = Seq(
     // Optional for string interpolation to JSON model
     "io.circe" %% "circe-literal" % circeVersion,
     "io.circe" %% "circe-parser" % circeVersion,
+    "org.typelevel" %% "cats-effect" % "3.3.14",
     "ch.qos.logback" % "logback-classic" % "1.2.3",
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
     "io.netty" % "netty-all" % "4.1.89.Final",
     "com.softwaremill.sttp.client3" %% "core" % sttpVersion % Test,
-    "org.mockito" % "mockito-core" % "4.6.1" % Test,
-    "dev.zio" %% "zio" % zioVersion % Test,
-    "dev.zio" %% "zio-interop-cats" % "3.3.0" % Test,
-    "org.typelevel" %% "cats-effect-testing-scalatest" % "1.5.0" % Test,
-    "org.typelevel" %% "cats-effect" % "3.3.14" % Test,
-    "dev.zio" %% "zio-test" % zioVersion % Test,
-    "com.softwaremill.sttp.client3" %% "zio" % sttpVersion % Test,
     "com.softwaremill.sttp.client3" %% "cats" % sttpVersion % Test,
+    "org.mockito" % "mockito-core" % "4.6.1" % Test,
+    "org.typelevel" %% "cats-effect-testing-scalatest" % "1.5.0" % Test,
     "org.scalatest" %% "scalatest" % "3.2.13" % Test
   ),
   formatAndTest := {
@@ -47,20 +43,28 @@ lazy val commonSettings = Seq(
     .value
 )
 
-Test / test := (Test / test)
-  .dependsOn(Compile / scalafmtCheck)
-  .dependsOn(Test / scalafmtCheck)
-  .value
-
 //not to be used in ci, intellij has got a bit bumpy in the format on save on optimize imports across the project
 val formatAndTest =
   taskKey[Unit]("format all code then run tests, do not use on CI as any changes will not be committed")
 
 lazy val root = (project in file("."))
   .settings(commonSettings)
-  .aggregate(scalaHttpMockCore)
+  .aggregate(scalaHttpMockCore, scalaHttpMockZio)
 
 lazy val scalaHttpMockCore = (project in file("modules/core"))
   .settings(
     commonSettings
   )
+
+lazy val scalaHttpMockZio = (project in file("modules/zio"))
+  .settings(
+    commonSettings,
+    libraryDependencies ++= List(
+      "dev.zio" %% "zio" % zioVersion,
+      "dev.zio" %% "zio-interop-cats" % "3.3.0",
+      "com.softwaremill.sttp.client3" %% "zio" % sttpVersion % Test,
+      "dev.zio" %% "zio-test-sbt" % zioVersion % Test
+    ),
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(scalaHttpMockCore % "test->test;compile->compile")

@@ -1,9 +1,8 @@
-package com.github.pbyrne84.scalahttpmock.shared
+package com.github.pbyrne84.scalahttpmock.zio
 
-import com.github.pbyrne84.scalahttpmock.demo.ZioNettyMockServer
 import com.github.pbyrne84.scalahttpmock.service.executor.RunningMockServerWithOperations
 import com.github.pbyrne84.scalahttpmock.service.request.FreePort
-import com.github.pbyrne84.scalahttpmock.shared.ZIOBaseSpec.SharedDeps
+import com.github.pbyrne84.scalahttpmock.zio.ZIOBaseSpec.SharedDeps
 import zio.test.ZIOSpec
 import zio.{Task, ZLayer}
 

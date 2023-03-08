@@ -2,10 +2,9 @@ package com.github.pbyrne84.scalahttpmock.service
 
 import cats.effect._
 import cats.effect.testing.scalatest.AsyncIOSpec
-import com.github.pbyrne84.scalahttpmock.demo.ioexecutors.CENettyMockServiceExecutor
 import com.github.pbyrne84.scalahttpmock.expectation.matcher.HeaderEquals
 import com.github.pbyrne84.scalahttpmock.expectation.{Header, JsonResponse, ServiceExpectation}
-import com.github.pbyrne84.scalahttpmock.service.executor.RunningMockServerWithOperations
+import com.github.pbyrne84.scalahttpmock.service.executor.{CENettyMockServiceExecutor, RunningMockServerWithOperations}
 import com.github.pbyrne84.scalahttpmock.service.implementations.NettyMockServer
 import com.github.pbyrne84.scalahttpmock.service.request.{FreePort, VerificationFailure}
 import org.scalatest.freespec.AsyncFreeSpec

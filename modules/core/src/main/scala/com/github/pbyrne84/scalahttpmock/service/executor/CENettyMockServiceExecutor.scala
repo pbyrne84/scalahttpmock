@@ -1,7 +1,6 @@
-package com.github.pbyrne84.scalahttpmock.demo.ioexecutors
+package com.github.pbyrne84.scalahttpmock.service.executor
 
 import cats.effect.IO
-import com.github.pbyrne84.scalahttpmock.service.executor.{NettyMockServiceExecutor, RunningServer}
 import com.typesafe.scalalogging.StrictLogging
 import io.netty.channel.{ChannelFuture, EventLoopGroup}
 

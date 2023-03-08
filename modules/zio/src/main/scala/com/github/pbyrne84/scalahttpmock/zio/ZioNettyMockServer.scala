@@ -1,6 +1,5 @@
-package com.github.pbyrne84.scalahttpmock.demo
+package com.github.pbyrne84.scalahttpmock.zio
 
-import com.github.pbyrne84.scalahttpmock.demo.ioexecutors.ZIONettyMockServiceExecutor
 import com.github.pbyrne84.scalahttpmock.expectation.ServiceExpectation
 import com.github.pbyrne84.scalahttpmock.service.executor.RunningMockServerWithOperations
 import com.github.pbyrne84.scalahttpmock.service.implementations.NettyMockServer
@@ -17,9 +16,10 @@ trait ZIOServiced[A] {
 object ZioNettyMockServer extends ZIOServiced[RunningMockServerWithOperations[Task]] {
 
   def layer(port: Int): ZLayer[Any, Throwable, RunningMockServerWithOperations[Task]] = ZLayer.apply {
-    import zio.interop.catz._
     implicit val zIOMockServiceExecutor: ZIONettyMockServiceExecutor = new ZIONettyMockServiceExecutor()
 
+    // Eye level is buy level
+    import zio.interop.catz._
     NettyMockServer.createIoMonadVersion(port).start.map { result =>
       println(s"starting zio server on $port")
       result

@@ -1,10 +1,9 @@
-package com.github.pbyrne84.scalahttpmock.service
+package com.github.pbyrne84.scalahttpmock.zio
 
-import com.github.pbyrne84.scalahttpmock.demo.ZioNettyMockServer
 import com.github.pbyrne84.scalahttpmock.expectation.matcher.HeaderEquals
 import com.github.pbyrne84.scalahttpmock.expectation.{Header, JsonResponse, ServiceExpectation}
+import com.github.pbyrne84.scalahttpmock.service.TestServiceExpectations
 import com.github.pbyrne84.scalahttpmock.service.request.VerificationFailure
-import com.github.pbyrne84.scalahttpmock.shared.ZIOBaseSpec
 import sttp.client3.httpclient.zio.HttpClientZioBackend
 import sttp.model.StatusCode
 import zio.ZIO
