@@ -7,13 +7,12 @@ import com.github.pbyrne84.scalahttpmock.service.implementations.NettyMockServer
 import com.github.pbyrne84.scalahttpmock.service.request.{FreePort, VerificationFailure}
 import com.typesafe.scalalogging.StrictLogging
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll}
 import sttp.client3._
 import sttp.model.StatusCode
 
-import java.util.concurrent.TimeUnit
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 
 //Futures with eager running are always fun
 class TestServiceFutureSpec
@@ -28,14 +27,27 @@ class TestServiceFutureSpec
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
+  // The default 150 milli interval can bottle neck any operation to a minimum of 150 milli seconds.
+  // This can add up over a lot of tests. Running tests you want to use max CPU so when running tests you can
+  // monitor "top" on Linux etc to work out if for some reason the tests are idling doing nothing.
+  private val defaultPatienceConfig: PatienceConfig =
+    PatienceConfig(
+      timeout = scaled(Span(20, Seconds)),
+      interval = scaled(Span(1, Millis))
+    )
+
+  /** Implicit <code>PatienceConfig</code> value providing default configuration values suitable for integration
+    * testing.
+    */
+  implicit override val patienceConfig: PatienceConfig = defaultPatienceConfig
+
   // private lazy val port = FreePort.calculate
   private lazy val port = FreePort.calculate
   // futures eagerly running are so fun
   private lazy val service = NettyMockServer.createFutureVersion(port)
-  private val serverWaitDuration: Duration = Duration.apply(20, TimeUnit.SECONDS)
   private lazy val runningService: RunningMockServerWithOperations[Future] = {
     try {
-      Await.result(service.start, serverWaitDuration)
+      service.start.futureValue
     } catch {
       case e: Throwable =>
         throw new RuntimeException(s"Could not start future test on port $port", e)
@@ -54,7 +66,7 @@ class TestServiceFutureSpec
     // Usually I would just let the mock engine auto shut after all the test runs as what can happen is tests
     // start relying on other tests to start things up so just starting fake services once globally
     // is a bit more child proof. I am a child so I am including myself in that statement :)
-    Await.result(runningService.shutDown, serverWaitDuration).left.map(e => throw e)
+    runningService.shutDown.futureValue.left.map(e => throw e)
   }
 
   "future based test service" should {
