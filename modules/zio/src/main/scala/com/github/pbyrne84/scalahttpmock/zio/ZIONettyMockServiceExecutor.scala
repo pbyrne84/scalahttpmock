@@ -1,4 +1,4 @@
-package com.github.pbyrne84.scalahttpmock.demo.ioexecutors
+package com.github.pbyrne84.scalahttpmock.zio
 
 import com.github.pbyrne84.scalahttpmock.service.executor.{NettyMockServiceExecutor, RunningServer}
 import com.typesafe.scalalogging.StrictLogging

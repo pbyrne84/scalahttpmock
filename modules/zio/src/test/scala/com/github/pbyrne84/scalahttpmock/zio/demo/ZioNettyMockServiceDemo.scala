@@ -1,7 +1,8 @@
-package com.github.pbyrne84.scalahttpmock.demo
+package com.github.pbyrne84.scalahttpmock.zio.demo
 
-import com.github.pbyrne84.scalahttpmock.demo.ioexecutors.ZIONettyMockServiceExecutor
+import com.github.pbyrne84.scalahttpmock.demo.DemoExpectations
 import com.github.pbyrne84.scalahttpmock.service.implementations.NettyMockServer
+import com.github.pbyrne84.scalahttpmock.zio.ZIONettyMockServiceExecutor
 import zio.{ZIO, ZIOAppDefault}
 
 import java.time.Duration
