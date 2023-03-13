@@ -103,7 +103,7 @@ class CaseClassPrettifier {
       case _: List[_] => "List"
       case _: Vector[_] => "Vector"
       case _: ImmutableSeq[_] => "immutable.Seq"
-      case _: Seq[_] => "Seq"
+      case _: scala.collection.mutable.Seq[_] => "mutable.Seq"
       case _ => "Iterable"
     }
 
@@ -126,7 +126,7 @@ class CaseClassPrettifier {
     }
 
     classAsMaybeProduct(item)
-      .map { product: Product =>
+      .map { (product: Product) =>
         val analyzedResult = analyze(product)
         val fields = analyzedResult._2
           .filter(!_.contains("$"))

@@ -4,7 +4,10 @@ name := "scalahttpmock"
 
 version := "0.1-SNAPSHOT"
 
-scalaVersion := "2.13.8"
+lazy val scala213 = "2.13.8"
+lazy val scala3 = "3.2.2"
+
+scalaVersion := scala3
 
 val circeVersion = "0.14.2"
 
@@ -14,8 +17,22 @@ val sttpVersion: String = "3.8.11"
 // even though free port is detected it can still race across tests
 Test / parallelExecution := false
 
+lazy val supportedScalaVersions = List(scala3, scala213)
+
 lazy val commonSettings = Seq(
-  scalaVersion := "2.13.8",
+  scalaVersion := scala3,
+  crossScalaVersions := supportedScalaVersions,
+  scalacOptions ++= Seq(
+    "-encoding",
+    "utf8",
+    "-feature",
+    "-language:implicitConversions",
+    "-language:existentials",
+    "-unchecked"
+    // "-no-indent" - only for scala3 not cross build
+  ),
+  Test / parallelExecution := false,
+  // crossScalaVersions := supportedScalaVersions,
   libraryDependencies ++= Seq(
     // Optional for auto-derivation of JSON codecs
     "io.circe" %% "circe-generic" % circeVersion,
