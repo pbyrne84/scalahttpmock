@@ -8,5 +8,13 @@ jobs:
       - uses: olafurpg/setup-scala@v10
         with:
           java-version: adopt@1.11
-      - name: Validate
-        run: sbt test
+      - name: Validate scala3
+        run: | #+test seems to run a bit kooky missing things
+          echo "Running tests under scala3"
+          sbt "++ 3;test"
+      - name: Validate scala2.13
+        run: | #+test seems to run a bit kooky missing things
+          echo "Running tests under scala2.13"
+          sbt "++ 2.13;test"
+          
+          
