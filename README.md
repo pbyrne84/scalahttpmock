@@ -1,17 +1,46 @@
 # ScalaHttpMock
 
-A scala based http mocking service which tries to offer nicer errors
+A scala based http mocking service with a netty backgound which tries to offer nicer errors
 and easy switching from an expectation to a verification. Ideally
 this should enable clearer boundary testing.
 
 ## Dependency setup in a project
-All package name etc will change before publishing
+All package name etc. will change before publishing
 
 ## Starting
 
+### Future
 ```scala
-MockServiceFactory.create(9999) // will create a running test service on 9999
+NettyMockServer.createFutureVersion(port = 9999).start
 ```
+#### Example future test
+<https://github.com/pbyrne84/scalahttpmock/blob/master/modules/core/src/test/scala/com/github/pbyrne84/scalahttpmock/service/TestServiceFutureSpec.scala>
+
+
+### Cats Effect
+```scala
+implicit val mockServiceExecutor: CENettyMockServiceExecutor = new CENettyMockServiceExecutor()
+NettyMockServer.createIoMonadVersion(port = 9999).start
+```
+#### Example CE test
+<https://github.com/pbyrne84/scalahttpmock/blob/master/modules/core/src/test/scala/com/github/pbyrne84/scalahttpmock/service/TestServiceCESpec.scala>
+
+
+### ZIO 
+```scala
+import zio.interop.catz._
+implicit val zIOMockServiceExecutor: ZIONettyMockServiceExecutor = new ZIONettyMockServiceExecutor()
+NettyMockServer.createIoMonadVersion(port = 9999).start
+```
+#### Example Layer for a test
+<https://github.com/pbyrne84/scalahttpmock/blob/master/modules/zio/src/main/scala/com/github/pbyrne84/scalahttpmock/zio/ZioNettyMockServer.scala>
+
+#### Shared ZIO layer so startup is shared between any tests
+<https://github.com/pbyrne84/scalahttpmock/blob/master/modules/zio/src/test/scala/com/github/pbyrne84/scalahttpmock/zio/ZIOBaseSpec.scala>
+
+#### Example ZIO test using shared layering
+<https://github.com/pbyrne84/scalahttpmock/blob/master/modules/zio/src/test/scala/com/github/pbyrne84/scalahttpmock/zio/TestServiceZioSpec.scala>
+
 
 
 ## Adding an expectation
@@ -30,7 +59,6 @@ mockService.verifyCall(ServiceExpectation())
 ### Expectations
 Expectations are case classes with convenience methods to also help with
 copying to a modified version.
-
 
 For example the following are identical to one another
 ```scala
@@ -60,10 +88,10 @@ ServiceExpectation()
 
 ```
 
-so a factory method can be use to create the basis for a project/test
+so a factory method can be used to create the basis for a project/test
 and then only the minimum needs to be changed per scenario. As the
 expectation and verify have the same interface it is easy to switch
-from tight expectation to loose expectation altered to a then
+from tight expectation to a loose expectation altered to a then
 tight verification. For example an Any payload match for the request
 expectation then switched to an exact match for the verification.
 Sometimes too tight matching required in the expectation leads to
