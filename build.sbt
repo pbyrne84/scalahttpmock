@@ -29,8 +29,12 @@ lazy val commonSettings = Seq(
     "-language:implicitConversions",
     "-language:existentials",
     "-unchecked"
-    // "-no-indent" - only for scala3 not cross build
-  ),
+  ) ++
+    (CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, _)) => Seq("-Ytasty-reader") // flags only needed in Scala 2
+      case Some((3, _)) => Seq("-no-indent") // flags only needed in Scala 3
+      case _ => Seq.empty
+    }),
   Test / parallelExecution := false,
   // crossScalaVersions := supportedScalaVersions,
   libraryDependencies ++= Seq(
